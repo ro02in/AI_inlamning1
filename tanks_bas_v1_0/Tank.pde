@@ -58,6 +58,7 @@ class Tank extends Sprite {
 //    if (position.y > height+r) position.y = -r;
     
     // Rafal - Uppdaterad för att stanna på skärmen
+    // test message 2
     if (position.x < 0+r) position.x = 0+r;
     if (position.y < 0+r) position.y = 0+r;
     if (position.x > width-r) position.x = width-r;
