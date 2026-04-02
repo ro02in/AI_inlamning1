@@ -89,7 +89,7 @@ class Tank extends Sprite {
   void moveForward(){
     println("*** Tank.moveForward()");
     
-/*     if (this.velocity.x < this.maxspeed) {
+    /* if (this.velocity.x < this.maxspeed) {
       this.velocity.x += 0.01;
     } else {
       this.velocity.x = this.maxspeed;  
@@ -105,7 +105,7 @@ class Tank extends Sprite {
   void moveBackward(){
     println("*** Tank.moveBackward()");
     
-/*     if (this.velocity.x > -this.maxspeed) {
+    /* if (this.velocity.x > -this.maxspeed) {
       this.velocity.x -= 0.01;
     } else {
       this.velocity.x = -this.maxspeed;  

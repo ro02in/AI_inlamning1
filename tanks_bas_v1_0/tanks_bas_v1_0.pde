@@ -84,12 +84,12 @@ void draw()
   background(200);
 
   if (!gameOver && !pause) {
-    
-    // UPDATE LOGIC
-    updateTanksLogic();
-    
+  
     // SEARCH FOR ENEMIES
     searchForEnemies();
+
+    // UPDATE LOGIC
+    updateTanksLogic();
   
   }
   
@@ -119,11 +119,44 @@ void updateTanksLogic() {
 }
 
 boolean canMoveForwards(Tank tank) {
-  tank.moveForward();
-  if (checkForCollisions(tank))
-    return false;
-  tank.moveBackward();
-  return true;
+  float accel = 0.1;
+  float nextSpeed = tank.speed + accel;
+  if (nextSpeed > tank.maxspeed) nextSpeed = tank.maxspeed;
+
+  float nextVX = cos(tank.angle) * nextSpeed;
+  float nextVY = sin(tank.angle) * nextSpeed;
+
+  PVector nextPos = PVector.add(tank.position, new PVector(nextVX, nextVY));
+
+  return !checkForCollisionsAtPosition(tank, nextPos);
+}
+
+boolean checkForCollisionsAtPosition(Tank thisTank, PVector testPos) {
+  float r = thisTank.getDiameter() / 2;
+
+  // väggar
+  if (testPos.x < r) return true;
+  if (testPos.y < r) return true;
+  if (testPos.x > width - r) return true;
+  if (testPos.y > height - r) return true;
+
+  // andra tanks
+  for (Tank tank : allTanks) {
+    if (tank == thisTank) continue;
+
+    PVector othPos = tank.getPosition();
+    float othR = tank.getDiameter() / 2;
+
+    float dx = testPos.x - othPos.x;
+    float dy = testPos.y - othPos.y;
+
+    float distSq = dx * dx + dy * dy;
+    float radSum = r + othR;
+
+    if (distSq < radSum * radSum) return true;
+  }
+
+  return false;
 }
 
 boolean checkForCollisions(Tank thisTank) {
