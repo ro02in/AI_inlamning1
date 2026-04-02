@@ -128,7 +128,7 @@ void checkForInput() {
         }
       }
       
-      if (!up && !down) {
+      if (!up && !down  && !right && !left) {
         tank0.state=0;
       }
 }
