@@ -88,8 +88,8 @@ void draw()
     // UPDATE LOGIC
     updateTanksLogic();
     
-    // CHECK FOR COLLISIONS
-    checkForCollisions();
+    // SEARCH FOR ENEMIES
+    searchForEnemies();
   
   }
   
@@ -102,18 +102,29 @@ void draw()
 }
 
 //======================================
+void searchForEnemies() {
+  if (!checkForCollisions())
+    tank0.state = 1; // Forwards
+  else
+    tank0.state = 0; // Still
+}
+
+//======================================
 void updateTanksLogic() {
   for (Tank tank : allTanks) {
     tank.update();
   }
 }
 
-void checkForCollisions() {
+boolean checkForCollisions() {
   //println("*** checkForCollisions()");
   for (Tank tank : allTanks) {
-    tank.checkForCollisions(tank1);
-    tank.checkForCollisions(new PVector(width, height));
+    if (tank0.checkForCollisions(tank))
+      return true;
+    if (tank0.checkForCollisions(new PVector(width, height)))
+      return true;
   }
+  return false;
 }
 
 //======================================
@@ -155,4 +166,10 @@ void displayGUI() {
     fill(30);
     text("Game Over!", width/2-100, height/2);
   }  
+}
+
+void keyReleased() {
+  if (key == 'p') {
+    pause = !pause;
+  }
 }
