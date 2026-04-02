@@ -103,10 +103,12 @@ void draw()
 
 //======================================
 void searchForEnemies() {
-  if (!checkForCollisions())
+  if (canMoveForwards(tank0))
     tank0.state = 1; // Forwards
-  else
+  else {
     tank0.state = 0; // Still
+    tank0.turnRight();
+  }
 }
 
 //======================================
@@ -116,12 +118,20 @@ void updateTanksLogic() {
   }
 }
 
-boolean checkForCollisions() {
+boolean canMoveForwards(Tank tank) {
+  tank.moveForward();
+  if (checkForCollisions(tank))
+    return false;
+  tank.moveBackward();
+  return true;
+}
+
+boolean checkForCollisions(Tank thisTank) {
   //println("*** checkForCollisions()");
   for (Tank tank : allTanks) {
-    if (tank0.checkForCollisions(tank))
+    if (thisTank.checkForCollisions(tank))
       return true;
-    if (tank0.checkForCollisions(new PVector(width, height)))
+    if (thisTank.checkForCollisions(new PVector(width, height)))
       return true;
   }
   return false;
