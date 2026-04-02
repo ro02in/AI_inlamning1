@@ -16,6 +16,17 @@ class Tree extends Sprite {
   }
 
   //**************************************************
+  @Override
+  PVector getPosition() {
+    return position;
+  }
+
+  @Override
+  float getDiameter() {
+    return diameter;
+  }
+
+  //**************************************************
   
   void checkCollision() {
     

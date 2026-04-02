@@ -14,6 +14,7 @@ class Tank extends Sprite {
 
   float speed;
   float maxspeed;
+  float angle;  // Tanks direction
   
   int state;
   boolean isInTransition;
@@ -33,31 +34,56 @@ class Tank extends Sprite {
     this.state        = 0; //0(still), 1(moving)
     this.speed        = 0;
     this.maxspeed     = 3;
+    this.angle = 0;  // pointing right by default
     this.isInTransition = false;
   }
-  
+
   //======================================
-  void checkEnvironment() {
+  @Override
+  PVector getPosition() {
+    return position;
+  }
+
+  @Override
+  float getDiameter() {
+    return diameter;
+  }
+
+  //======================================
+  boolean checkEnvironment() {
     println("*** Tank.checkEnvironment()");
     
-    borders();
+    return borders();
   }
   
-  void checkForCollisions(Sprite sprite) {
-    
+  boolean checkForCollisions(Sprite sprite) {
+    if (sprite.equals(this))
+      return false;
+    PVector othPos = sprite.getPosition();
+    float othR = sprite.getDiameter()/2;
+    float r = diameter/2;
+    float xDistance = position.x - othPos.x;
+    float yDistance = position.y - othPos.y;
+    float distancePythagoras = (float)Math.sqrt((xDistance * xDistance) + (yDistance * yDistance));
+    if (distancePythagoras < othR + r)
+      return true;
+    return false;
   }
   
-  void checkForCollisions(PVector vec) {
-    checkEnvironment();
+  boolean checkForCollisions(PVector vec) {
+    if (checkEnvironment())
+      return true;
+    return false;
   }
   
   // Följande är bara ett exempel
-  void borders() {
+  boolean borders() {
     float r = diameter/2;
-    if (position.x < -r) position.x = width+r;
-    if (position.y < -r) position.y = height+r;
-    if (position.x > width+r) position.x = -r;
-    if (position.y > height+r) position.y = -r;
+    if (position.x < r) return true;
+    if (position.y < r) return true;
+    if (position.x > width-r) return true;
+    if (position.y > height-r) return true;
+    return false;
   }
   
   
@@ -65,28 +91,48 @@ class Tank extends Sprite {
   void moveForward(){
     println("*** Tank.moveForward()");
     
-    if (this.velocity.x < this.maxspeed) {
+    /* if (this.velocity.x < this.maxspeed) {
       this.velocity.x += 0.01;
     } else {
       this.velocity.x = this.maxspeed;  
-    }
+    } */
+
+    float accel = 0.1;
+    speed += accel;
+    if (speed > maxspeed) speed = maxspeed;
+    velocity.x = cos(angle) * speed;
+    velocity.y = sin(angle) * speed;
   }
   
   void moveBackward(){
     println("*** Tank.moveBackward()");
     
-    if (this.velocity.x > -this.maxspeed) {
+    /* if (this.velocity.x > -this.maxspeed) {
       this.velocity.x -= 0.01;
     } else {
       this.velocity.x = -this.maxspeed;  
-    }
+    } */
+    float accel = 0.1;
+    speed -= accel;
+    if (speed < -maxspeed) speed = -maxspeed;
+    velocity.x = cos(angle) * speed;
+    velocity.y = sin(angle) * speed;
   }
+
+void turnLeft() {
+  angle -= 0.05;  
+}
+
+void turnRight() {
+  angle += 0.05;  
+}
   
   void stopMoving(){
     println("*** Tank.stopMoving()");
     
     // hade varit finare med animering!
-    this.velocity.x = 0; 
+    speed = 0;
+    velocity.set(0, 0);
   }
   
   //======================================
@@ -99,6 +145,12 @@ class Tank extends Sprite {
         break;
       case "reverse":  
         moveBackward();
+        break;
+      case "turnLeft":
+        turnLeft();
+        break;
+      case "turnRight":
+        turnRight();
         break;
       case "turning":
         break;
@@ -127,8 +179,11 @@ class Tank extends Sprite {
       case 2:
         action("reverse");
         break;
-      case 7:
-        goBackToBaseAStar();
+      case 3: // Turn right
+        action("turnRight");
+        break;
+      case 4: // Turn left
+        action("turnLeft");
         break;
     }
     
@@ -197,7 +252,8 @@ void goBackToBaseAStar() {
     pushMatrix();
     
       translate(this.position.x, this.position.y);
-      
+      rotate(angle);  //shows rotation visually
+
       imageMode(CENTER);
       drawTank(0, 0);
       imageMode(CORNER);
