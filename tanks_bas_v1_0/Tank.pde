@@ -52,10 +52,16 @@ class Tank extends Sprite {
   // Följande är bara ett exempel
   void borders() {
     float r = diameter/2;
-    if (position.x < -r) position.x = width+r;
-    if (position.y < -r) position.y = height+r;
-    if (position.x > width+r) position.x = -r;
-    if (position.y > height+r) position.y = -r;
+//    if (position.x < -r) position.x = width+r;
+//    if (position.y < -r) position.y = height+r;
+//    if (position.x > width+r) position.x = -r;
+//    if (position.y > height+r) position.y = -r;
+    
+    // Rafal - Uppdaterad för att stanna på skärmen
+    if (position.x < 0+r) position.x = 0+r;
+    if (position.y < 0+r) position.y = 0+r;
+    if (position.x > width-r) position.x = width-r;
+    if (position.y > height-r) position.y = height-r;
   }
   
   
