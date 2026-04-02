@@ -156,3 +156,9 @@ void displayGUI() {
     text("Game Over!", width/2-100, height/2);
   }  
 }
+
+  void keyReleased() {
+  if (key == 'p') {
+    pause = !pause;
+  }
+}

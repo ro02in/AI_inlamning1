@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Tank extends Sprite {
 
   PVector acceleration;
@@ -103,6 +105,8 @@ class Tank extends Sprite {
       case "stop": 
         stopMoving();
         break;
+      case "A":
+        goBackToBaseAStar();
     }
   }
   
@@ -122,11 +126,53 @@ class Tank extends Sprite {
         break;
       case 2:
         action("reverse");
-        
+        break;
+      case 7:
+        goBackToBaseAStar();
         break;
     }
     
-    this.position.add(velocity);
+  this.position.add(velocity);
+  isHomeBase();
+  goBackToBaseAStar();
+  }
+  
+
+void goBackToBaseAStar() {
+
+  int gridSize = 20;
+
+  Node start = new Node(int(position.x/gridSize), int(position.y/gridSize));
+  Node goal  = new Node(int(150/gridSize), int(350/gridSize));
+
+  AStar astar = new AStar();
+  ArrayList<Node> path = astar.findPath(start, goal);
+
+  if (path == null) {
+    println("No path found");
+    return;
+  }
+
+  println("PATH FOUND");
+
+  for (Node n : path) {
+    println(n.x + "," + n.y);
+  }
+}
+
+  boolean isHomeBase() {
+    println("isHomeBase method");
+    
+    if (this.position.x < 150 && this.position.y < 350){
+      println("i AM HOMW");
+      return true;
+    } else return false;
+
+  }
+
+  //manhattan hwuristic
+  float heuristic(Node a, Node b) {
+  return abs(a.x - b.x) + abs(a.y - b.y);
   }
   
   //====================================== 
@@ -164,5 +210,21 @@ class Tank extends Sprite {
       text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", 25+5, -5-5);
     
     popMatrix();
+  }
+
+}
+
+class Node {
+  int x, y;
+  float g, h, f;
+  Node parent;
+
+  Node(int x, int y) {
+    this.x = x;
+    this.y = y;
+    this.g = 0;
+    this.h = 0;
+    this.f = 0;
+    this.parent = null;
   }
 }
