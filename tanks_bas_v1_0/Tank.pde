@@ -12,6 +12,7 @@ class Tank extends Sprite {
 
   float speed;
   float maxspeed;
+  float angle;  // Tanks direction
   
   int state;
   boolean isInTransition;
@@ -31,6 +32,7 @@ class Tank extends Sprite {
     this.state        = 0; //0(still), 1(moving)
     this.speed        = 0;
     this.maxspeed     = 3;
+    this.angle = 0;  // pointing right by default
     this.isInTransition = false;
   }
   
@@ -63,28 +65,48 @@ class Tank extends Sprite {
   void moveForward(){
     println("*** Tank.moveForward()");
     
-    if (this.velocity.x < this.maxspeed) {
+/*     if (this.velocity.x < this.maxspeed) {
       this.velocity.x += 0.01;
     } else {
       this.velocity.x = this.maxspeed;  
-    }
+    } */
+
+    float accel = 0.1;
+    speed += accel;
+    if (speed > maxspeed) speed = maxspeed;
+    velocity.x = cos(angle) * speed;
+    velocity.y = sin(angle) * speed;
   }
   
   void moveBackward(){
     println("*** Tank.moveBackward()");
     
-    if (this.velocity.x > -this.maxspeed) {
+/*     if (this.velocity.x > -this.maxspeed) {
       this.velocity.x -= 0.01;
     } else {
       this.velocity.x = -this.maxspeed;  
-    }
+    } */
+    float accel = 0.1;
+    speed -= accel;
+    if (speed < -maxspeed) speed = -maxspeed;
+    velocity.x = cos(angle) * speed;
+    velocity.y = sin(angle) * speed;
   }
+
+void turnLeft() {
+  angle -= 0.05;  
+}
+
+void turnRight() {
+  angle += 0.05;  
+}
   
   void stopMoving(){
     println("*** Tank.stopMoving()");
     
     // hade varit finare med animering!
-    this.velocity.x = 0; 
+    speed = 0;
+    velocity.set(0, 0);
   }
   
   //======================================
