@@ -117,8 +117,10 @@ void checkForInput() {
       }
       
       if (right) {
+        tank0.state=3; // turnRight
       } else 
       if (left) {
+        tank0.state=4; // turnLeft
       }
       
       if (!up && !down) {
