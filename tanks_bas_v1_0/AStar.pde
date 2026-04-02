@@ -52,6 +52,14 @@ class AStar {
         int nx = current.x + dir[0];
         int ny = current.y + dir[1];
 
+        // prevent searching outside grid
+        int cols = width / 20;
+        int rows = height / 20;
+
+        if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) {
+          continue;
+        }
+
         Node neighbor = new Node(nx, ny);
 
         boolean skip = false;

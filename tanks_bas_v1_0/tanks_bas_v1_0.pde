@@ -103,6 +103,11 @@ void draw()
 
 //======================================
 void searchForEnemies() {
+    if (tank0.isEnemyBase()) {
+    tank0.state = 5;
+    return;
+  }
+
   if (canMoveForwards(tank0))
     tank0.state = 1; // Forwards
   else {

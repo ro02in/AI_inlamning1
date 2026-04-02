@@ -185,16 +185,17 @@ void turnRight() {
       case 4: // Turn left
         action("turnLeft");
         break;
+      case 5:
+        goBackToBaseAStar();
+        break;
     }
     
   this.position.add(velocity);
   isHomeBase();
-  goBackToBaseAStar();
   }
   
 
 void goBackToBaseAStar() {
-
   int gridSize = 20;
 
   Node start = new Node(int(position.x/gridSize), int(position.y/gridSize));
@@ -204,12 +205,11 @@ void goBackToBaseAStar() {
   ArrayList<Node> path = astar.findPath(start, goal);
 
   if (path == null) {
-    println("No path found");
+    println("No path found!!!!!!!!!!!!!!!!!!!!!!!!");
     return;
   }
 
   println("PATH FOUND");
-
   for (Node n : path) {
     println(n.x + "," + n.y);
   }
@@ -224,6 +224,16 @@ void goBackToBaseAStar() {
     } else return false;
 
   }
+
+  boolean isEnemyBase() {
+
+  if (position.x > width - 150 && position.y > height - 350) {
+    println("ENEMY BASE FOUND");
+    return true;
+  }
+
+  return false;
+}
 
   //manhattan hwuristic
   float heuristic(Node a, Node b) {
