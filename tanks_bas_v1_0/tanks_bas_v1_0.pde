@@ -82,7 +82,6 @@ void setup()
 void draw()
 {
   background(200);
-  checkForInput(); // Kontrollera inmatning.
   
   if (!gameOver && !pause) {
     
@@ -100,30 +99,6 @@ void draw()
   displayTanks();  
   
   displayGUI();
-}
-
-//======================================
-void checkForInput() {
-  
-      if (up) {
-        if (!pause && !gameOver) {
-          tank0.state=1; // moveForward
-        }
-      } else 
-      if (down) {
-        if (!pause && !gameOver) {
-          tank0.state=2; // moveBackward
-        }
-      }
-      
-      if (right) {
-      } else 
-      if (left) {
-      }
-      
-      if (!up && !down) {
-        tank0.state=0;
-      }
 }
 
 //======================================
@@ -180,63 +155,4 @@ void displayGUI() {
     fill(30);
     text("Game Over!", width/2-100, height/2);
   }  
-}
-
-//======================================
-void keyPressed() {
-  System.out.println("keyPressed!");
-
-    if (key == CODED) {
-      switch(keyCode) {
-      case LEFT:
-        left = true;
-        break;
-      case RIGHT:
-        right = true;
-        break;
-      case UP:
-        up = true;
-        break;
-      case DOWN:
-        down = true;
-        break;
-      }
-    }
-
-}
-
-void keyReleased() {
-  System.out.println("keyReleased!");
-    if (key == CODED) {
-      switch(keyCode) {
-      case LEFT:
-        left = false;
-        break;
-      case RIGHT:
-        right = false;
-        break;
-      case UP:
-        up = false;
-        //tank0.stopMoving();
-        break;
-      case DOWN:
-        down = false;
-        //tank0.stopMoving();
-        break;
-      }
-      
-    }
-    
-    if (key == 'p') {
-      pause = !pause;
-    }
-}
-
-// Mousebuttons
-void mousePressed() {
-  println("---------------------------------------------------------");
-  println("*** mousePressed() - Musknappen har tryckts ned.");
-  
-  mouse_pressed = true;
-  
 }
