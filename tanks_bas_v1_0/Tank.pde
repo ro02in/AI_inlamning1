@@ -144,6 +144,12 @@ void turnRight() {
       case "reverse":  
         moveBackward();
         break;
+      case "turnLeft":
+        turnLeft();
+        break;
+      case "turnRight":
+        turnRight();
+        break;
       case "turning":
         break;
       case "stop": 
@@ -168,7 +174,12 @@ void turnRight() {
         break;
       case 2:
         action("reverse");
-        
+        break;
+      case 3: // Turn right
+        action("turnRight");
+        break;
+      case 4: // Turn left
+        action("turnLeft");
         break;
     }
     
@@ -197,7 +208,8 @@ void turnRight() {
     pushMatrix();
     
       translate(this.position.x, this.position.y);
-      
+      rotate(angle);  //shows rotation visually
+
       imageMode(CENTER);
       drawTank(0, 0);
       imageMode(CORNER);
