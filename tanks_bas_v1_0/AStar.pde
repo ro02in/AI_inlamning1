@@ -52,7 +52,6 @@ class AStar {
         int nx = current.x + dir[0];
         int ny = current.y + dir[1];
 
-        // prevent searching outside grid
         int cols = width / 20;
         int rows = height / 20;
 

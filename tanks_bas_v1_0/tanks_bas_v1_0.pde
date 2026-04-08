@@ -103,7 +103,10 @@ void draw()
 
 //======================================
 void searchForEnemies() {
-    if (tank0.isEnemyBase()) {
+  if (tank0.isEnemyBase()) {
+    if (tank0.state != 5) {       // only reset path when first entering state 5
+      tank0.pathCalculated = false;
+    }
     tank0.state = 5;
     return;
   }
@@ -206,7 +209,7 @@ void displayGUI() {
   if (pause) {
     textSize(36);
     fill(30);
-    text("...Paused! (\'p\'-continues)\n(upp/ner-change velocity)", width/1.7-100, height/2.5);
+    text("...Paused! (\'p\'-continues)", width/1.7-100, height/2.5);
   }
   
   if (gameOver) {

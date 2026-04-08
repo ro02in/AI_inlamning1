@@ -18,6 +18,10 @@ class Tank extends Sprite {
   
   int state;
   boolean isInTransition;
+
+  ArrayList<Node> astarPath = null;
+  int pathIndex = 0;
+  boolean pathCalculated = false;
  
   //======================================  
   Tank(String _name, PVector _startpos, float _size, color _col ) {
@@ -157,7 +161,7 @@ void turnRight() {
       case "stop": 
         stopMoving();
         break;
-      case "A":
+      case "goBackToBaseAStar":
         goBackToBaseAStar();
     }
   }
@@ -186,7 +190,7 @@ void turnRight() {
         action("turnLeft");
         break;
       case 5:
-        goBackToBaseAStar();
+        action("goBackToBaseAStar");
         break;
     }
     
@@ -198,26 +202,51 @@ void turnRight() {
 void goBackToBaseAStar() {
   int gridSize = 20;
 
-  Node start = new Node(int(position.x/gridSize), int(position.y/gridSize));
-  Node goal  = new Node(int(150/gridSize), int(350/gridSize));
+  if (!pathCalculated) {
+    Node start = new Node(int(position.x / gridSize), int(position.y / gridSize));
+    Node goal  = new Node(int(75 / gridSize), int(175 / gridSize));
 
-  AStar astar = new AStar();
-  ArrayList<Node> path = astar.findPath(start, goal);
+    AStar astar = new AStar();
+    astarPath = astar.findPath(start, goal);
+    pathCalculated = true;
+    pathIndex = 0;
 
-  if (path == null) {
-    println("No path found!!!!!!!!!!!!!!!!!!!!!!!!");
-    return;
+    if (astarPath == null) {
+      println("No path found");
+      return;
+    }
+    println("Path found");
   }
 
-  println("PATH FOUND");
-  for (Node n : path) {
-    println(n.x + "," + n.y);
+  if (astarPath == null) return;
+
+  if (pathIndex < astarPath.size()) {
+    Node target = astarPath.get(pathIndex);
+    float targetX = target.x * gridSize + gridSize / 2.0;
+    float targetY = target.y * gridSize + gridSize / 2.0;
+
+    float dx = targetX - position.x;
+    float dy = targetY - position.y;
+    float dist = sqrt(dx * dx + dy * dy);
+
+    if (dist < 5) {
+      pathIndex++;
+    } else {
+      angle = atan2(dy, dx);
+      speed += 0.1;
+      if (speed > maxspeed) speed = maxspeed;
+      velocity.x = cos(angle) * speed;
+      velocity.y = sin(angle) * speed;
+    }
+  } else {
+    stopMoving();
+    state = 0;
+    pathCalculated = false;
   }
 }
 
   boolean isHomeBase() {
-    println("isHomeBase method");
-    
+
     if (this.position.x < 150 && this.position.y < 350){
       println("i AM HOMW");
       return true;
@@ -226,19 +255,14 @@ void goBackToBaseAStar() {
   }
 
   boolean isEnemyBase() {
-
+    println("isEnemyBase metohd");
   if (position.x > width - 150 && position.y > height - 350) {
-    println("ENEMY BASE FOUND");
+    println("ENEMY BASE FOUND!!!!!!!!!!!!!!!!!!!!!!!!!");
     return true;
   }
 
   return false;
 }
-
-  //manhattan hwuristic
-  float heuristic(Node a, Node b) {
-  return abs(a.x - b.x) + abs(a.y - b.y);
-  }
   
   //====================================== 
   void drawTank(float x, float y) {
