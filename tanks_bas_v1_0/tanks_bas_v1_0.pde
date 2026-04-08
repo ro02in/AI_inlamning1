@@ -117,6 +117,8 @@ void searchForEnemies() {
   for (Tank tank : allTanks) {
     if (!tank.name.equals("tank0")) // Remove to make all move around
       return;
+    if (tank.state == 5)
+      return;
     if (tank.isEnemyBase()) {
       if (tank.state != 5) {       // only reset path when first entering state 5
         tank.pathCalculated = false;
