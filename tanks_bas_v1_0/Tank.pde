@@ -2,13 +2,10 @@ class Tank extends Sprite {
 
   PVector acceleration;
   PVector velocity;
-  PVector position;
   
   PVector startpos;
-  String name;
   PImage img;
   color col;
-  float diameter;
 
   float speed;
   float maxspeed;
@@ -36,55 +33,6 @@ class Tank extends Sprite {
     this.isInTransition = false;
   }
 
-  //======================================
-  @Override
-  PVector getPosition() {
-    return position;
-  }
-
-  @Override
-  float getDiameter() {
-    return diameter;
-  }
-
-  //======================================
-  boolean checkEnvironment() {
-    println("*** Tank.checkEnvironment()");
-    
-    return borders();
-  }
-  
-  boolean checkForCollisions(Sprite sprite) {
-    if (sprite.equals(this))
-      return false;
-    PVector othPos = sprite.getPosition();
-    float othR = sprite.getDiameter()/2;
-    float r = diameter/2;
-    float xDistance = position.x - othPos.x;
-    float yDistance = position.y - othPos.y;
-    float distancePythagoras = (float)Math.sqrt((xDistance * xDistance) + (yDistance * yDistance));
-    if (distancePythagoras < othR + r)
-      return true;
-    return false;
-  }
-  
-  boolean checkForCollisions(PVector vec) {
-    if (checkEnvironment())
-      return true;
-    return false;
-  }
-  
-  // Följande är bara ett exempel
-  boolean borders() {
-    float r = diameter/2;
-    if (position.x < r) return true;
-    if (position.y < r) return true;
-    if (position.x > width-r) return true;
-    if (position.y > height-r) return true;
-    return false;
-  }
-  
-  
   //======================================
   void moveForward(){
     println("*** Tank.moveForward()");

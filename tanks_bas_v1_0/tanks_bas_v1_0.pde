@@ -128,43 +128,20 @@ boolean canMoveForwards(Tank tank) {
 
   PVector nextPos = PVector.add(tank.position, new PVector(nextVX, nextVY));
 
-  return !checkForCollisionsAtPosition(tank, nextPos);
+  // "Spöktank"
+  Sprite sprite = new Sprite();
+  sprite.position = nextPos;
+  sprite.diameter = tank.diameter;
+  sprite.name = tank.name; // Tillagd för att förhindra "spökkollision" med faktiska tanken
+
+  return !checkForCollisions(sprite);
 }
 
-boolean checkForCollisionsAtPosition(Tank thisTank, PVector testPos) {
-  float r = thisTank.getDiameter() / 2;
-
-  // väggar
-  if (testPos.x < r) return true;
-  if (testPos.y < r) return true;
-  if (testPos.x > width - r) return true;
-  if (testPos.y > height - r) return true;
-
-  // andra tanks
+boolean checkForCollisions(Sprite sprite) {
   for (Tank tank : allTanks) {
-    if (tank == thisTank) continue;
-
-    PVector othPos = tank.getPosition();
-    float othR = tank.getDiameter() / 2;
-
-    float dx = testPos.x - othPos.x;
-    float dy = testPos.y - othPos.y;
-
-    float distSq = dx * dx + dy * dy;
-    float radSum = r + othR;
-
-    if (distSq < radSum * radSum) return true;
-  }
-
-  return false;
-}
-
-boolean checkForCollisions(Tank thisTank) {
-  //println("*** checkForCollisions()");
-  for (Tank tank : allTanks) {
-    if (thisTank.checkForCollisions(tank))
+    if (sprite.checkForCollisions(tank))
       return true;
-    if (thisTank.checkForCollisions(new PVector(width, height)))
+    if (sprite.checkForEnvironmentCollisions())
       return true;
   }
   return false;
