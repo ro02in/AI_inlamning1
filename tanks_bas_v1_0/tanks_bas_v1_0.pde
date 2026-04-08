@@ -12,6 +12,9 @@ PVector tree1_pos, tree2_pos, tree3_pos;
 Tree[] allTrees   = new Tree[3];
 Tank[] allTanks   = new Tank[6];
 
+// Trees
+Tree tree1, tree2, tree3;
+
 // Team0
 color team0Color;
 PVector team0_tank0_startpos;
@@ -47,6 +50,14 @@ void setup()
   tree1_pos = new PVector(230, 600);
   tree2_pos = new PVector(280, 230);
   tree3_pos = new PVector(530, 520);
+
+  tree1 = new Tree(tree_img, tree1_pos);
+  tree2 = new Tree(tree_img, tree2_pos);
+  tree3 = new Tree(tree_img, tree3_pos);
+
+  allTrees[0] = tree1;
+  allTrees[1] = tree2;
+  allTrees[2] = tree3;
   
   tank_size = 50;
   
@@ -103,11 +114,11 @@ void draw()
 
 //======================================
 void searchForEnemies() {
-  if (canMoveForwards(tank0))
+  if (tank0.turning == 0 && canMoveForwards(tank0)) {
     tank0.state = 1; // Forwards
-  else {
+  } else {
     tank0.state = 0; // Still
-    tank0.turnRight();
+    tank0.decideAndTurn();
   }
 }
 
@@ -141,9 +152,13 @@ boolean checkForCollisions(Sprite sprite) {
   for (Tank tank : allTanks) {
     if (sprite.checkForCollisions(tank))
       return true;
-    if (sprite.checkForEnvironmentCollisions())
+  }
+  for (Tree tree : allTrees) {
+    if (sprite.checkForCollisions(tree))
       return true;
   }
+  if (sprite.checkForEnvironmentCollisions())
+    return true;
   return false;
 }
 

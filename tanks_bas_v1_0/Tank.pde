@@ -13,8 +13,11 @@ class Tank extends Sprite {
   
   int state;
   boolean isInTransition;
+
+  int turning; // -1 = turning left, 0 = not turning, 1 = turning right
+  int stepsToNext = -1;
  
-  //======================================  
+  //======================================
   Tank(String _name, PVector _startpos, float _size, color _col ) {
     println("*** Tank.Tank()");
     this.name         = _name;
@@ -36,12 +39,17 @@ class Tank extends Sprite {
   //======================================
   void moveForward(){
     println("*** Tank.moveForward()");
+
+    if (stepsToNext < 0) {
+      stepsToNext = int(random(10, 200));
+    }
+    if (stepsToNext == 0) {
+      stepsToNext -= 1;
+      decideAndTurn();
+      return;
+    }
     
-    /* if (this.velocity.x < this.maxspeed) {
-      this.velocity.x += 0.01;
-    } else {
-      this.velocity.x = this.maxspeed;  
-    } */
+    stepsToNext -=1 ;
 
     float accel = 0.1;
     speed += accel;
@@ -65,13 +73,39 @@ class Tank extends Sprite {
     velocity.y = sin(angle) * speed;
   }
 
-void turnLeft() {
-  angle -= 0.05;  
-}
+  void decideAndTurn() {
+    if (stepsToNext < 0) {
+      stepsToNext = int(random(3, 10));
+    }
 
-void turnRight() {
-  angle += 0.05;  
-}
+    if (turning == 0) {
+      turning = random(1) < 0.5 ? -1 : 1;
+    }
+
+    switch (turning) {
+      case -1:
+        turnLeft();
+        break;
+      case 1:
+        turnRight();
+        break;
+    }
+
+    stepsToNext -= 1;
+
+    if (stepsToNext == 0) {
+      stepsToNext -= 1;
+      turning = 0;
+    }
+  }
+
+  void turnLeft() {
+    angle -= 0.05;  
+  }
+
+  void turnRight() {
+    angle += 0.05;  
+  }
   
   void stopMoving(){
     println("*** Tank.stopMoving()");
