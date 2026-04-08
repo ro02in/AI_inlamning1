@@ -2,6 +2,7 @@
 // Syftet är att sammanställa alla varabelvärden i scenariet.
 // Variabelnamn har satts för att försöka överensstämma med exempelkoden.
 // Klassen Tank är minimal och skickas mer med som koncept(anrop/states/vektorer).
+//
 
 boolean left, right, up, down;
 boolean mouse_pressed;
@@ -82,7 +83,8 @@ void setup()
 void draw()
 {
   background(200);
-  
+  checkForInput(); // Kontrollera inmatning.
+
   if (!gameOver && !pause) {
     
     // UPDATE LOGIC
@@ -99,6 +101,36 @@ void draw()
   displayTanks();  
   
   displayGUI();
+}
+
+//======================================
+void checkForInput() {
+  
+      if (up) {
+        if (!pause && !gameOver) {
+          tank0.state=1; // moveForward
+        }
+      } else 
+      if (down) {
+        if (!pause && !gameOver) {
+          tank0.state=2; // moveBackward
+        }
+      }
+      
+      if (right) {
+        if (!pause && !gameOver){
+          tank0.state=3; // turnRight
+        }
+      } else 
+      if (left) {
+        if (!pause && !gameOver){
+          tank0.state=4; // turnLeft
+        }
+      }
+      
+      if (!up && !down  && !right && !left) {
+        tank0.state=0;
+      }
 }
 
 //======================================
@@ -157,8 +189,61 @@ void displayGUI() {
   }  
 }
 
-  void keyReleased() {
-  if (key == 'p') {
-    pause = !pause;
-  }
+//======================================
+void keyPressed() {
+  System.out.println("keyPressed!");
+
+    if (key == CODED) {
+      switch(keyCode) {
+      case LEFT:
+        left = true;
+        break;
+      case RIGHT:
+        right = true;
+        break;
+      case UP:
+        up = true;
+        break;
+      case DOWN:
+        down = true;
+        break;
+      }
+    }
+
+}
+
+void keyReleased() {
+  System.out.println("keyReleased!");
+    if (key == CODED) {
+      switch(keyCode) {
+      case LEFT:
+        left = false;
+        break;
+      case RIGHT:
+        right = false;
+        break;
+      case UP:
+        up = false;
+        //tank0.stopMoving();
+        break;
+      case DOWN:
+        down = false;
+        //tank0.stopMoving();
+        break;
+      }
+      
+    }
+    
+    if (key == 'p') {
+      pause = !pause;
+    }
+}
+
+// Mousebuttons
+void mousePressed() {
+  println("---------------------------------------------------------");
+  println("*** mousePressed() - Musknappen har tryckts ned.");
+  
+  mouse_pressed = true;
+  
 }
