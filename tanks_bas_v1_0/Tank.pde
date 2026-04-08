@@ -16,7 +16,7 @@ class Tank extends Sprite {
 
   int turning; // -1 = turning left, 0 = not turning, 1 = turning right
   int stepsToNext = -1;
- 
+
   //======================================
   Tank(String _name, PVector _startpos, float _size, color _col ) {
     println("*** Tank.Tank()");
@@ -74,8 +74,8 @@ class Tank extends Sprite {
   }
 
   void decideAndTurn() {
-    if (stepsToNext < 0) {
-      stepsToNext = int(random(3, 10));
+    if (stepsToNext < 0 || stepsToNext > 20) {
+      stepsToNext = int(random(10, 20));
     }
 
     if (turning == 0) {
