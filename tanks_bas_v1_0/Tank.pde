@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Tank extends Sprite {
 
   PVector acceleration;
@@ -13,6 +15,10 @@ class Tank extends Sprite {
   
   int state;
   boolean isInTransition;
+
+  ArrayList<Node> astarPath = null;
+  int pathIndex = 0;
+  boolean pathCalculated = false;
 
   int turning; // -1 = turning left, 0 = not turning, 1 = turning right
   int stepsToNext = -1;
@@ -137,6 +143,8 @@ class Tank extends Sprite {
       case "stop": 
         stopMoving();
         break;
+      case "goBackToBaseAStar":
+        goBackToBaseAStar();
     }
   }
   
@@ -163,10 +171,80 @@ class Tank extends Sprite {
       case 4: // Turn left
         action("turnLeft");
         break;
+      case 5:
+        action("goBackToBaseAStar");
+        break;
     }
     
-    this.position.add(velocity);
+  this.position.add(velocity);
+  isHomeBase();
   }
+  
+
+void goBackToBaseAStar() {
+  int gridSize = 20;
+
+  if (!pathCalculated) {
+    Node start = new Node(int(position.x / gridSize), int(position.y / gridSize));
+    Node goal  = new Node(int(75 / gridSize), int(175 / gridSize));
+
+    AStar astar = new AStar();
+    astarPath = astar.findPath(start, goal);
+    pathCalculated = true;
+    pathIndex = 0;
+
+    if (astarPath == null) {
+      println("No path found");
+      return;
+    }
+    println("Path found");
+  }
+
+  if (astarPath == null) return;
+
+  if (pathIndex < astarPath.size()) {
+    Node target = astarPath.get(pathIndex);
+    float targetX = target.x * gridSize + gridSize / 2.0;
+    float targetY = target.y * gridSize + gridSize / 2.0;
+
+    float dx = targetX - position.x;
+    float dy = targetY - position.y;
+    float dist = sqrt(dx * dx + dy * dy);
+
+    if (dist < 5) {
+      pathIndex++;
+    } else {
+      angle = atan2(dy, dx);
+      speed += 0.1;
+      if (speed > maxspeed) speed = maxspeed;
+      velocity.x = cos(angle) * speed;
+      velocity.y = sin(angle) * speed;
+    }
+  } else {
+    stopMoving();
+    state = 0;
+    pathCalculated = false;
+  }
+}
+
+  boolean isHomeBase() {
+
+    if (this.position.x < 150 && this.position.y < 350){
+      println("i AM HOMW");
+      return true;
+    } else return false;
+
+  }
+
+  boolean isEnemyBase() {
+    println("isEnemyBase metohd");
+  if (position.x > width - 150 && position.y > height - 350) {
+    println("ENEMY BASE FOUND!!!!!!!!!!!!!!!!!!!!!!!!!");
+    return true;
+  }
+
+  return false;
+}
   
   //====================================== 
   void drawTank(float x, float y) {
@@ -204,5 +282,21 @@ class Tank extends Sprite {
       text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", 25+5, -5-5);
     
     popMatrix();
+  }
+
+}
+
+class Node {
+  int x, y;
+  float g, h, f;
+  Node parent;
+
+  Node(int x, int y) {
+    this.x = x;
+    this.y = y;
+    this.g = 0;
+    this.h = 0;
+    this.f = 0;
+    this.parent = null;
   }
 }
