@@ -277,11 +277,14 @@ void goBackToBaseAStar() {
       
       strokeWeight(1);
       fill(230);
-      rect(this.position.x+25, this.position.y-25, 100, 40);
+      float hudX = this.position.x + 25;
+      float hudY = this.position.y - 25;
+      rect(hudX, hudY, 100, 40);
       fill(30);
       textSize(15);
-      text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", this.position.x+25+5, this.position.y-5-5);
-    
+      String posText = String.format(Locale.US, "(%.2f, %.2f)", this.position.x, this.position.y);
+      //text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", this.position.x+25+5, this.position.y-5-5);
+      text(this.name + "\n" + posText, hudX + 5, hudY + 20);
   }
 
 }
