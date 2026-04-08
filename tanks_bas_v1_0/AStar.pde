@@ -4,6 +4,24 @@
 import java.util.*;
 
 class AStar {
+  ArrayList<PVector> obstacles;
+  int gridSize;
+
+  AStar(ArrayList<PVector> obstacles, int gridSize){
+    this.obstacles = obstacles;
+    this.gridSize = gridSize;
+  }
+
+  boolean isObstacle(int gx, int gy) {
+    float wx = gx * gridSize + gridSize / 2.0;
+    float wy = gy * gridSize + gridSize / 2.0;
+    for (PVector obs : obstacles) {
+      float dx = wx - obs.x;
+      float dy = wy - obs.y;
+      if (sqrt(dx*dx + dy*dy) < gridSize * 1.5) return true;
+    }
+    return false;
+  }
 
   ArrayList<Node> findPath(Node start, Node goal) {
 
