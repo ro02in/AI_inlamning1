@@ -189,14 +189,14 @@ void turnRight() {
       imageMode(CENTER);
       drawTank(0, 0);
       imageMode(CORNER);
-      
+    popMatrix();
       strokeWeight(1);
       fill(230);
-      rect(0+25, 0-25, 100, 40);
+      rect(this.position.x+25, this.position.y-25, 100, 40);
       fill(30);
       textSize(15);
-      text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", 25+5, -5-5);
+      text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", this.position.x+25+5, this.position.y-5-5);
     
-    popMatrix();
+    //popMatrix();
   }
 }

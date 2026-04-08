@@ -224,11 +224,11 @@ void keyReleased() {
         break;
       case UP:
         up = false;
-        //tank0.stopMoving();
+        tank0.stopMoving();
         break;
       case DOWN:
         down = false;
-        //tank0.stopMoving();
+        tank0.stopMoving();
         break;
       }
       
