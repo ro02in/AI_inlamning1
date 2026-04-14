@@ -37,6 +37,7 @@ int tank_size;
 
 boolean gameOver;
 boolean pause;
+boolean moveWithKeys;
 
 //======================================
 void setup() 
@@ -116,7 +117,8 @@ void draw()
   team0.displayHomeBase();
   team1.displayHomeBase();
   displayTrees();
-  displayTanks();  
+  displayTanks();
+  displayMap(tank0);
   
   displayGUI();
 }
@@ -124,6 +126,9 @@ void draw()
 //======================================
 void searchForEnemies() {
   for (Tank tank : allTanks) {
+    if(moveWithKeys){
+      return;
+    }
     if (!tank.name.equals("tank0")) // Remove to make all move around
       return;
     if (tank.state == 5)
@@ -205,7 +210,7 @@ void displayGUI() {
   if (pause) {
     textSize(36);
     fill(30);
-    text("...Paused! (\'p\'-continues)", width/1.7-100, height/2.5);
+    text("...Paused! (\'p\'-continues)\n(\'2\'-move with keys)\n(\'1\'-ai move)", width/1.7-100, height/2.5);
   }
   
   if (gameOver) {
@@ -215,8 +220,40 @@ void displayGUI() {
   }  
 }
 
-void keyReleased() {
+void displayMap(Tank tank) {
+  tank.map.display();
+}
+
+
+
+void keyPressed(){
   if (key == 'p') {
     pause = !pause;
+  }
+    if (key == '1') {
+    pause = false;
+    moveWithKeys = false;
+
+  }
+
+  if(key == '2'){
+    pause = false;
+    moveWithKeys = true;
+    tank0.state = 0;
+  }
+
+  if(!moveWithKeys){return;}
+
+    if (key == 'w') tank0.state = 1;
+    if (key == 'a') tank0.state = 4;
+    if (key == 's') tank0.state = 2;
+    if (key == 'd') tank0.state = 3;
+}
+
+void keyReleased(){
+  if(!moveWithKeys){return;}
+
+    if (key == 'w' || key == 's' || key == 'a' || key == 'd') {
+    tank0.state = 0;
   }
 }
