@@ -42,6 +42,7 @@ class Tank extends Sprite {
     this.angle = 0;  // pointing right by default
     this.isInTransition = false;
     this.map = new Map(20);
+    map.addToMap(startpos.x, startpos.y, ObstacleType.NONE);
   }
 
   //======================================
@@ -332,7 +333,7 @@ class Tank extends Sprite {
     if (!pathCalculated) {
       Node start = new Node(int(position.x / gridSize), int(position.y / gridSize));
 
-      Node goal = new Node(int(75 / gridSize), int(175 / gridSize));
+      Node goal = new Node(int(startpos.x / gridSize), int(startpos.y / gridSize));
 
       AStar astar = new AStar(map, gridSize);
       astarPath = astar.findPath(start, goal);
