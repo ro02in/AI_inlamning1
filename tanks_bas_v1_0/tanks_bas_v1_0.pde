@@ -82,13 +82,13 @@ void setup()
   team1 = new Team(team1Color, width-150, height-350, 150, 350);
   
   //tank0_startpos = new PVector(50, 50);
-  tank0 = new Tank("tank0", team0_tank0_startpos,tank_size, team0Color );
-  tank1 = new Tank("tank1", team0_tank1_startpos,tank_size, team0Color );
-  tank2 = new Tank("tank2", team0_tank2_startpos,tank_size, team0Color );
+  tank0 = new Tank("tank0", team0_tank0_startpos,tank_size, team0 );
+  tank1 = new Tank("tank1", team0_tank1_startpos,tank_size, team0 );
+  tank2 = new Tank("tank2", team0_tank2_startpos,tank_size, team0 );
   
-  tank3 = new Tank("tank3", team1_tank0_startpos,tank_size, team1Color );
-  tank4 = new Tank("tank4", team1_tank1_startpos,tank_size, team1Color );
-  tank5 = new Tank("tank5", team1_tank2_startpos,tank_size, team1Color );
+  tank3 = new Tank("tank3", team1_tank0_startpos,tank_size, team1 );
+  tank4 = new Tank("tank4", team1_tank1_startpos,tank_size, team1 );
+  tank5 = new Tank("tank5", team1_tank2_startpos,tank_size, team1 );
   
   allTanks[0] = tank0;                         // Symbol samma som index!
   allTanks[1] = tank1;

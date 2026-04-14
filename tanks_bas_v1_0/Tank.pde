@@ -24,11 +24,11 @@ class Tank extends Sprite {
   int stepsToNext = -1;
 
   //======================================
-  Tank(String _name, PVector _startpos, float _size, color _col ) {
+  Tank(String _name, PVector _startpos, float _size, Team _team ) {
     println("*** Tank.Tank()");
     this.name         = _name;
     this.diameter     = _size;
-    this.col          = _col;
+    this.col          = _team.getColor();
 
     this.startpos     = new PVector(_startpos.x, _startpos.y);
     this.position     = new PVector(this.startpos.x, this.startpos.y);

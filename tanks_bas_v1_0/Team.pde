@@ -12,13 +12,12 @@ class Team {
   // Används inte, men bör ligga här. 
   void displayHomeBase() {
     strokeWeight(1);
-  
-    fill(teamColor, 15);    // Base Team 0(red)
-/*     rect(0, 0, 150, 350);
-    
-    fill(team1Color, 15);    // Base Team 1(blue) 
-    rect(width - 151, height - 351, 150, 350); */
+    fill(teamColor, 15);
     rect(baseX, baseY, baseW, baseH);
+  }
+
+  color getColor() {
+    return teamColor;
   }
 
   void display() {
