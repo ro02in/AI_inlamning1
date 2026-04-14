@@ -22,12 +22,16 @@ PVector team0_tank1_startpos;
 PVector team0_tank2_startpos;
 Tank tank0, tank1, tank2;
 
+Team team0;
+
 // Team1
 color team1Color;
 PVector team1_tank0_startpos;
 PVector team1_tank1_startpos;
 PVector team1_tank2_startpos;
 Tank tank3, tank4, tank5;
+
+Team team1;
 
 int tank_size;
 
@@ -66,12 +70,16 @@ void setup()
   team0_tank0_startpos  = new PVector(50, 50);
   team0_tank1_startpos  = new PVector(50, 150);
   team0_tank2_startpos  = new PVector(50, 250);
+
+  team0 = new Team(team0Color, 0, 0, 150, 350);
   
   // Team1
   team1Color  = color(0, 150, 200);             // Base Team 1(blue)
   team1_tank0_startpos  = new PVector(width-50, height-250);
   team1_tank1_startpos  = new PVector(width-50, height-150);
   team1_tank2_startpos  = new PVector(width-50, height-50);
+
+  team1 = new Team(team1Color, width-150, height-350, 150, 350);
   
   //tank0_startpos = new PVector(50, 50);
   tank0 = new Tank("tank0", team0_tank0_startpos,tank_size, team0Color );
@@ -105,7 +113,8 @@ void draw()
   }
   
   // UPDATE DISPLAY 
-  displayHomeBase();
+  team0.displayHomeBase();
+  team1.displayHomeBase();
   displayTrees();
   displayTanks();  
   
@@ -178,7 +187,7 @@ boolean checkForCollisions(Sprite sprite) {
 
 //======================================
 // Följande bör ligga i klassen Team
-void displayHomeBase() {
+/* void displayHomeBase() {
   strokeWeight(1);
 
   fill(team0Color, 15);    // Base Team 0(red)
@@ -186,7 +195,7 @@ void displayHomeBase() {
   
   fill(team1Color, 15);    // Base Team 1(blue) 
   rect(width - 151, height - 351, 150, 350);
-}
+} */
   
 // Följande bör ligga i klassen Tree
 void displayTrees() {
