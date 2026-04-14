@@ -45,6 +45,20 @@ public class Sprite {
     return false;
   }
   
+  boolean checkForGlobalCollisions() {
+    for (Tank tank : allTanks) {
+      if (checkForCollisions(tank))
+        return true;
+    }
+    for (Tree tree : allTrees) {
+      if (checkForCollisions(tree))
+        return true;
+    }
+    if (checkForEnvironmentCollisions())
+      return true;
+    return false;
+  }
+  
   boolean borders() {
     float r = diameter/2;
     if (position.x < r) return true;
