@@ -48,17 +48,18 @@ class Tank extends Sprite {
   //======================================
   void moveForward() {
     println("*** Tank.moveForward()");
-
-    if (stepsToNext < 0) {
-      stepsToNext = int(random(10, 200));
+    // randomly moves left or right every couple of steps
+    if (!moveWithKeys){
+      if (stepsToNext < 0) {
+        stepsToNext = int(random(10, 200));
+      }
+      if (stepsToNext == 0) {
+        stepsToNext -= 1;
+        decideAndTurn();
+        return;
+      }
+      stepsToNext -=1;
     }
-    if (stepsToNext == 0) {
-      stepsToNext -= 1;
-      decideAndTurn();
-      return;
-    }
-
-    stepsToNext -=1;
 
     float accel = 0.1;
     speed += accel;
