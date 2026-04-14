@@ -117,25 +117,25 @@ void draw()
 //======================================
 void searchForEnemies() {
   for (Tank tank : allTanks) {
-    if(moveWithKeys){
-      return;
-    }
-    if (!tank.name.equals("tank0")) // Remove to make all move around
-      return;
-    if (tank.state == 5)
-      return;
+    if (moveWithKeys) return;
+
+    if (!tank.name.equals("tank0")) return; // Remove to make all move around
+
+    if (tank.state == 5) return;
+
     if (tank.isEnemyBase()) {
       if (tank.state != 5) {       // only reset path when first entering state 5
         tank.pathCalculated = false;
+        tank.astarPath = null;
       }
       tank.state = 5;
       return;
     }
 
     if (tank.turning == 0 && canMoveForwards(tank)) {
-      tank.state = 1; // Forwards
+      tank.state = 1;
     } else {
-      tank.state = 0; // Still
+      tank.state = 0;
       tank.decideAndTurn();
     }
   }

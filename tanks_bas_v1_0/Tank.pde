@@ -156,8 +156,9 @@ class Tank extends Sprite {
   //======================================
   void action(String _action) {
     println("*** Tank.action()");
-
-    lookAhead(); // Look ahead with every action
+    if (state != 5) {
+      lookAhead();
+    }
 
     switch (_action) {
     case "move":
@@ -220,29 +221,43 @@ class Tank extends Sprite {
 
     if (!pathCalculated) {
       Node start = new Node(int(position.x / gridSize), int(position.y / gridSize));
-      Node goal  = new Node(int(75  / gridSize), int(175 / gridSize));
 
-      ArrayList<PVector> obstacles = new ArrayList<PVector>();
-      obstacles.add(tree1_pos);
-      obstacles.add(tree2_pos);
-      obstacles.add(tree3_pos);
+      Node goal = new Node(int(75 / gridSize), int(175 / gridSize));
 
-      AStar astar = new AStar(obstacles, gridSize);
+      AStar astar = new AStar(map, gridSize);
       astarPath = astar.findPath(start, goal);
       pathCalculated = true;
       pathIndex = 0;
+
+      if (astarPath == null) {
+        println("Ingen väg hittad — tanken stannar.");
+      } else {
+        println("Väg hittad, antal steg: " + astarPath.size());
+      }
     }
 
     if (astarPath == null) {
-      println("No path found");
+
+      float targetX = 75;
+      float targetY = 175;
+      float dx = targetX - position.x;
+      float dy = targetY - position.y;
+      float dist = sqrt(dx * dx + dy * dy);
+      if (dist > 5) {
+        angle = atan2(dy, dx);
+        speed += 0.1;
+        if (speed > maxspeed) speed = maxspeed;
+        velocity.x = cos(angle) * speed;
+        velocity.y = sin(angle) * speed;
+      } else {
+        stopMoving();
+        state = 0;
+      }
       return;
     }
-    println("Path found");
-
-    if (astarPath == null) return;
 
     if (pathIndex < astarPath.size()) {
-      Node target = astarPath.get(pathIndex);
+      Node target  = astarPath.get(pathIndex);
       float targetX = target.x * gridSize + gridSize / 2.0;
       float targetY = target.y * gridSize + gridSize / 2.0;
 
