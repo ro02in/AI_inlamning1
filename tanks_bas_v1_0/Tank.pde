@@ -58,7 +58,7 @@ class Tank extends Sprite {
       return;
     }
 
-    stepsToNext -=1 ;
+    stepsToNext -=1;
 
     float accel = 0.1;
     speed += accel;
@@ -83,15 +83,71 @@ class Tank extends Sprite {
   }
 
   void lookAhead() {
-    float lookAngle = angle - 0.3;
-    for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 5; j++) {
+    float lookAngle = angle - 0.5;
+    Integer[] rayBlocked = new Integer[5];
+    for (int i = 0; i < 5; i++) {
+      for (int j = 1; j < 5; j++) {
         float x = position.x + cos(lookAngle) * j * 20;
         float y = position.y + sin(lookAngle) * j * 20;
+        if (x < 0 || x > width || y < 0 || y > height) {
+          rayBlocked[i] = j;
+          break;
+        }
         ObstacleType obstacleType = checkForObstacles(x, y);
         map.addToMap(x, y, obstacleType);
+        if (obstacleType != obstacleType.NONE) {
+          rayBlocked[i] = j;
+          break;
+        }
       }
-      lookAngle += 0.3;
+      lookAngle += 0.25;
+    }
+    if (state == 0) return; // Keep standing still if still
+
+    // Center is clear -> go straight
+    if (rayBlocked[1] == null && rayBlocked[2] == null && rayBlocked[3] == null) {
+      state = 1;
+      return;
+    }
+
+    speed -= 0.2; // Slow down upon obstacle
+
+    // How far left/right side is open (null = fully open = 5)
+    int left = (rayBlocked[0] != null) ? rayBlocked[0] : 5;
+
+    int right = (rayBlocked[4] != null) ? rayBlocked[4] : 5;
+
+    boolean leftOpen = (left == 5);
+    boolean rightOpen = (right == 5);
+
+    // Both blocked less than 2 ahead -> reverse if possible
+    if (left < 2 && right < 2) {
+      if (canMoveBackwards()) {
+        state = 2;
+        return;
+      }
+    }
+    // Both open or can't reverse -> random
+    if (leftOpen && rightOpen) {
+      state = (random(1) < 0.5) ? 4 : 3;
+    }
+    // Left open, right blocked -> turn left
+    else if (leftOpen && !rightOpen) {
+      state = 4;
+    }
+    // Right open, left blocked -> turn right
+    else if (rightOpen && !leftOpen) {
+      state = 3;
+    }
+    // Both blocked -> turn towards the most open side
+    else {
+      if (left > right) {
+        state = 4;
+      } else if (right > left) {
+        state = 3;
+      } else {
+        state = (random(1) < 0.5) ? 4 : 3;
+      }
     }
   }
 
@@ -138,10 +194,14 @@ class Tank extends Sprite {
 
   void turnLeft() {
     angle -= 0.05;
+    velocity.x = cos(angle) * speed;
+    velocity.y = sin(angle) * speed;
   }
 
   void turnRight() {
     angle += 0.05;
+    velocity.x = cos(angle) * speed;
+    velocity.y = sin(angle) * speed;
   }
 
   void stopMoving() {
@@ -155,8 +215,6 @@ class Tank extends Sprite {
   //======================================
   void action(String _action) {
     println("*** Tank.action()");
-
-    lookAhead(); // Look ahead with every action
 
     switch (_action) {
     case "move":
@@ -186,6 +244,8 @@ class Tank extends Sprite {
 
   void update() {
     println("*** Tank.update()");
+
+    lookAhead();
 
     switch (state) {
     case 0:

@@ -134,9 +134,6 @@ void searchForEnemies() {
 
     if (tank.turning == 0 && canMoveForwards(tank)) {
       tank.state = 1; // Forwards
-    } else {
-      tank.state = 0; // Still
-      tank.decideAndTurn();
     }
   }
 }
