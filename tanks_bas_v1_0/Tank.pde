@@ -293,7 +293,8 @@ class Tank extends Sprite {
   void update() {
     println("*** Tank.update()");
 
-    lookAhead();
+    if (state != 5)
+      lookAhead();
 
     switch (state) {
     case 0:
@@ -331,7 +332,7 @@ class Tank extends Sprite {
 
     if (!pathCalculated) {
       Node start = new Node(int(position.x / gridSize), int(position.y / gridSize));
-      Node goal  = new Node(int(75  / gridSize), int(175 / gridSize));
+      Node goal  = new Node(int(startpos.x  / gridSize), int(startpos.y / gridSize));
 
       ArrayList<PVector> obstacles = new ArrayList<PVector>();
       obstacles.add(tree1_pos);
