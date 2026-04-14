@@ -27,7 +27,6 @@ class Tank extends Sprite {
 
   //======================================
   Tank(String _name, PVector _startpos, float _size, color _col ) {
-    println("*** Tank.Tank()");
     this.name         = _name;
     this.diameter     = _size;
     this.col          = _col;
@@ -48,16 +47,16 @@ class Tank extends Sprite {
   //======================================
   void moveForward() {
     println("*** Tank.moveForward()");
-
-    if (!moveWithKeys) {
-      if (stepsToNext < 0) stepsToNext = int(random(20, 50));
-      stepsToNext--;
-      if (stepsToNext <= 0) {
-        turning = (random(1) < 0.5) ? -1 : 1;
-        state = (turning == -1) ? 4 : 3;
-        stepsToNext = int(random(10, 30));
+    if (!moveWithKeys){
+      if (stepsToNext < 0) {
+        stepsToNext = int(random(10, 200));
+      }
+      if (stepsToNext == 0) {
+        stepsToNext -= 1;
+        decideAndTurn();
         return;
       }
+      stepsToNext -=1;
     }
 
     float accel = 0.1;
@@ -68,7 +67,6 @@ class Tank extends Sprite {
   }
 
   void moveBackward() {
-    println("*** Tank.moveBackward()");
 
     /* if (this.velocity.x > -this.maxspeed) {
     this.velocity.x -= 0.01;
@@ -102,8 +100,10 @@ class Tank extends Sprite {
       }
       lookAngle += 0.25;
     }
-    if (state == 0) return; // Keep standing still if still
+
+    if (state == 0 || state == 5) return; // Keep standing still if still
     if (moveWithKeys) return;
+
 
     // If committed to a turn, keep going until done
     if (turning != 0) {
@@ -253,7 +253,6 @@ class Tank extends Sprite {
   }
 
   void stopMoving() {
-    println("*** Tank.stopMoving()");
 
     // hade varit finare med animering!
     speed = 0;
@@ -262,7 +261,6 @@ class Tank extends Sprite {
 
   //======================================
   void action(String _action) {
-    println("*** Tank.action()");
     if (state != 5) {
       lookAhead();
     }
@@ -294,8 +292,6 @@ class Tank extends Sprite {
   //Här är det tänkt att agenten har möjlighet till egna val.
 
   void update() {
-    println("*** Tank.update()");
-
     lookAhead();
 
     switch (state) {
@@ -395,9 +391,7 @@ class Tank extends Sprite {
   }
 
   boolean isHomeBase() {
-
     if (this.position.x < 150 && this.position.y < 350) {
-      println("i AM HOME");
       return true;
     } else return false;
   }
@@ -405,7 +399,6 @@ class Tank extends Sprite {
   boolean isEnemyBase() {
     println("isEnemyBase metohd");
     if (position.x > width - 150 && position.y > height - 350) {
-      println("ENEMY BASE FOUND!!!!!!!!!!!!!!!!!!!!!!!!!");
       return true;
     }
 

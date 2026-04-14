@@ -102,6 +102,7 @@ void draw()
 
     // UPDATE LOGIC
     updateTanksLogic();
+    println(tank0.state);
   
   }
   
