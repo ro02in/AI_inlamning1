@@ -1,6 +1,5 @@
 //inspo from source https://www.geeksforgeeks.org/dsa/a-search-algorithm/
 
-
 import java.util.*;
 
 class AStar {

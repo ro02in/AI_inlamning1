@@ -23,6 +23,8 @@ class Tank extends Sprite {
   int turning; // -1 = turning left, 0 = not turning, 1 = turning right
   int stepsToNext = -1;
 
+  Map map;
+
   //======================================
   Tank(String _name, PVector _startpos, float _size, color _col ) {
     println("*** Tank.Tank()");
@@ -40,6 +42,7 @@ class Tank extends Sprite {
     this.maxspeed     = 3;
     this.angle = 0;  // pointing right by default
     this.isInTransition = false;
+    this.map = new Map(20);
   }
 
   //======================================
@@ -68,15 +71,43 @@ class Tank extends Sprite {
     println("*** Tank.moveBackward()");
 
     /* if (this.velocity.x > -this.maxspeed) {
-     this.velocity.x -= 0.01;
-     } else {
-     this.velocity.x = -this.maxspeed;
+    this.velocity.x -= 0.01;
+    } else {
+    this.velocity.x = -this.maxspeed;
      } */
     float accel = 0.1;
     speed -= accel;
     if (speed < -maxspeed) speed = -maxspeed;
     velocity.x = cos(angle) * speed;
     velocity.y = sin(angle) * speed;
+  }
+
+  void lookAhead() {
+    float lookAngle = angle - 0.3;
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 5; j++) {
+        float x = position.x + cos(lookAngle) * j * 20;
+        float y = position.y + sin(lookAngle) * j * 20;
+        ObstacleType obstacleType = checkForObstacles(x, y);
+        map.addToMap(x, y, obstacleType);
+      }
+      lookAngle += 0.3;
+    }
+  }
+
+  ObstacleType checkForObstacles(float x, float y) {
+    for (Tree tree : allTrees) {
+      if (tree.checkForCollisions(new PVector(x, y))) {
+        return ObstacleType.TREE;
+      }
+    }
+    for (Tank tank : allTanks) {
+      if (tank.name == this.name) continue;
+      if (tank.checkForCollisions(new PVector(x, y))) {
+        return ObstacleType.TANK;
+      }
+    }
+    return ObstacleType.NONE;
   }
 
   void decideAndTurn() {
@@ -124,6 +155,8 @@ class Tank extends Sprite {
   //======================================
   void action(String _action) {
     println("*** Tank.action()");
+
+    lookAhead(); // Look ahead with every action
 
     switch (_action) {
     case "move":
@@ -235,7 +268,7 @@ class Tank extends Sprite {
   boolean isHomeBase() {
 
     if (this.position.x < 150 && this.position.y < 350) {
-      println("i AM HOMW");
+      println("i AM HOME");
       return true;
     } else return false;
   }
