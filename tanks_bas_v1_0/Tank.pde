@@ -48,17 +48,16 @@ class Tank extends Sprite {
   //======================================
   void moveForward() {
     println("*** Tank.moveForward()");
-    // randomly moves left or right every couple of steps
-    if (!moveWithKeys){
-      if (stepsToNext < 0) {
-        stepsToNext = int(random(10, 200));
-      }
-      if (stepsToNext == 0) {
-        stepsToNext -= 1;
-        decideAndTurn();
+
+    if (!moveWithKeys) {
+      if (stepsToNext < 0) stepsToNext = int(random(20, 50));
+      stepsToNext--;
+      if (stepsToNext <= 0) {
+        turning = (random(1) < 0.5) ? -1 : 1;
+        state = (turning == -1) ? 4 : 3;
+        stepsToNext = int(random(10, 30));
         return;
       }
-      stepsToNext -=1;
     }
 
     float accel = 0.1;
@@ -104,6 +103,21 @@ class Tank extends Sprite {
       lookAngle += 0.25;
     }
     if (state == 0) return; // Keep standing still if still
+    if (moveWithKeys) return;
+
+    // If committed to a turn, keep going until done
+    if (turning != 0) {
+      stepsToNext--;
+      speed -= 0.03;
+      if (speed < 0) speed = 0;
+      if (stepsToNext <= 0) {
+        if (canMove(velocity)) {
+          turning = 0;
+          stepsToNext = int(random(20, 50));
+        }
+      }
+      return;
+    }
 
     // Center is clear -> go straight
     if (rayBlocked[1] == null && rayBlocked[2] == null && rayBlocked[3] == null) {
@@ -111,45 +125,78 @@ class Tank extends Sprite {
       return;
     }
 
-    speed -= 0.2; // Slow down upon obstacle
+    speed -= 0.15; // Slow down if obstacle
+    if (speed < 0) speed = 0;
 
-    // How far left/right side is open (null = fully open = 5)
     int left = (rayBlocked[0] != null) ? rayBlocked[0] : 5;
-
     int right = (rayBlocked[4] != null) ? rayBlocked[4] : 5;
-
     boolean leftOpen = (left == 5);
     boolean rightOpen = (right == 5);
 
-    // Both blocked less than 2 ahead -> reverse if possible
+    // Both blocked close, reverse
     if (left < 2 && right < 2) {
       if (canMoveBackwards()) {
         state = 2;
         return;
       }
     }
-    // Both open or can't reverse -> random
-    if (leftOpen && rightOpen) {
-      state = (random(1) < 0.5) ? 4 : 3;
-    }
-    // Left open, right blocked -> turn left
-    else if (leftOpen && !rightOpen) {
-      state = 4;
-    }
-    // Right open, left blocked -> turn right
-    else if (rightOpen && !leftOpen) {
-      state = 3;
-    }
-    // Both blocked -> turn towards the most open side
-    else {
-      if (left > right) {
-        state = 4;
-      } else if (right > left) {
-        state = 3;
-      } else {
-        state = (random(1) < 0.5) ? 4 : 3;
-      }
-    }
+
+    // Pick a direction and commit to it
+    if (leftOpen && !rightOpen) turning = -1;
+    else if (rightOpen && !leftOpen) turning = 1;
+    else if (left > right) turning = -1;
+    else if (right > left) turning = 1;
+    else turning = (random(1) < 0.5) ? -1 : 1;
+
+    state = (turning == -1) ? 4 : 3;
+    stepsToNext = int(random(10, 30));
+  }
+
+  boolean canMoveForwards() {
+    float accel = 0.1;
+    float nextSpeed = speed + accel;
+    if (nextSpeed > maxspeed) nextSpeed = maxspeed;
+  
+    float nextVX = cos(angle) * nextSpeed;
+    float nextVY = sin(angle) * nextSpeed;
+  
+    PVector nextPos = PVector.add(position, new PVector(nextVX, nextVY));
+  
+    // "Spöktank"
+    Sprite sprite = new Sprite();
+    sprite.position = nextPos;
+    sprite.diameter = diameter;
+    sprite.name = name; // Tillagd för att förhindra "spökkollision" med faktiska tanken
+  
+    return !sprite.checkForGlobalCollisions();
+  }
+
+  boolean canMoveBackwards() {
+    float accel = 0.1;
+    float nextSpeed = speed - accel;
+    if (nextSpeed < -maxspeed) nextSpeed = -maxspeed;
+
+    float nextVX = cos(angle) * nextSpeed;
+    float nextVY = sin(angle) * nextSpeed;
+
+    PVector nextPos = PVector.add(position, new PVector(nextVX, nextVY));
+  
+    // "Spöktank"
+    Sprite sprite = new Sprite();
+    sprite.position = nextPos;
+    sprite.diameter = diameter;
+    sprite.name = name; // Tillagd för att förhindra "spökkollision" med faktiska tanken
+  
+    return !sprite.checkForGlobalCollisions();
+  }
+
+  boolean canMove(PVector vel) {
+    PVector nextPos = PVector.add(position, vel);
+    Sprite sprite = new Sprite();
+    sprite.position = nextPos;
+    sprite.diameter = diameter;
+    sprite.name = name;
+    return !sprite.checkForGlobalCollisions();
   }
 
   ObstacleType checkForObstacles(float x, float y) {
@@ -268,6 +315,10 @@ class Tank extends Sprite {
     case 5:
       action("goBackToBaseAStar");
       break;
+    }
+
+    if (!canMove(velocity)) {
+      stopMoving();
     }
 
     this.position.add(velocity);
