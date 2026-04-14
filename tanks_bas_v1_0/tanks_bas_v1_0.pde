@@ -108,7 +108,8 @@ void draw()
   // UPDATE DISPLAY 
   displayHomeBase();
   displayTrees();
-  displayTanks();  
+  displayTanks();
+  displayMap(tank0);
   
   displayGUI();
 }
@@ -219,6 +220,10 @@ void displayGUI() {
     fill(30);
     text("Game Over!", width/2-100, height/2);
   }  
+}
+
+void displayMap(Tank tank) {
+  tank.map.display();
 }
 
 

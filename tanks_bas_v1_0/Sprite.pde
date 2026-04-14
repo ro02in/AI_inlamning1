@@ -33,6 +33,17 @@ public class Sprite {
       return true;
     return false;
   }
+
+  boolean checkForCollisions(PVector position) {
+    float r = diameter/2;
+    if (
+        this.position.x < position.x + r &&
+        this.position.x > position.x - r &&
+        this.position.y < position.y + r &&
+        this.position.y > position.y - r
+      ) return true;
+    return false;
+  }
   
   boolean borders() {
     float r = diameter/2;
