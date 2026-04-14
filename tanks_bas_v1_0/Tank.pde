@@ -23,6 +23,7 @@ class Tank extends Sprite {
   int turning; // -1 = turning left, 0 = not turning, 1 = turning right
   int stepsToNext = -1;
 
+  Team team;
   Map map;
 
   //======================================
@@ -30,6 +31,7 @@ class Tank extends Sprite {
     println("*** Tank.Tank()");
     this.name         = _name;
     this.diameter     = _size;
+    this.team =         _team;
     this.col          = _team.getColor();
 
     this.startpos     = new PVector(_startpos.x, _startpos.y);
@@ -378,19 +380,19 @@ class Tank extends Sprite {
   }
 
   boolean isHomeBase() {
-    if (team0.isInsideBase(position)){    // Change this to proper teams later
+    if (team.isInsideBase(position)){ 
       println("i AM HOME");
       return true;
     }
     return false;
   }
 
-  boolean isEnemyBase() {
-    if (team1.isInsideBase(position)){    // Change this to proper teams later
-      println("AAAAAAAAAHHHHHHHHHHH");
-      return true;
+  boolean isEnemyBase() {                 // Hard coded for 2 teams
+    if (team == team0) {
+      return team1.isInsideBase(position);
+    } else {
+      return team0.isInsideBase(position);
     }
-    return false;
   }
 
   //======================================
