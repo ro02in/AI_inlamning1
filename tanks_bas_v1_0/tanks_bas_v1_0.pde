@@ -10,7 +10,7 @@ PImage tree_img;
 PVector tree1_pos, tree2_pos, tree3_pos;
 
 Tree[] allTrees   = new Tree[3];
-Tank[] allTanks   = new Tank[1];
+Tank[] allTanks   = new Tank[6];
 
 // Trees
 Tree tree1, tree2, tree3;
@@ -84,19 +84,19 @@ void setup()
   
   //tank0_startpos = new PVector(50, 50);
   tank0 = new Tank("tank0", team0_tank0_startpos,tank_size, team0 );
-/*   tank1 = new Tank("tank1", team0_tank1_startpos,tank_size, team0 );
+  tank1 = new Tank("tank1", team0_tank1_startpos,tank_size, team0 );
   tank2 = new Tank("tank2", team0_tank2_startpos,tank_size, team0 );
   
   tank3 = new Tank("tank3", team1_tank0_startpos,tank_size, team1 );
   tank4 = new Tank("tank4", team1_tank1_startpos,tank_size, team1 );
-  tank5 = new Tank("tank5", team1_tank2_startpos,tank_size, team1 ); */
+  tank5 = new Tank("tank5", team1_tank2_startpos,tank_size, team1 ); 
   
   allTanks[0] = tank0;                         // Symbol samma som index!
-/*   allTanks[1] = tank1;
+  allTanks[1] = tank1;
   allTanks[2] = tank2;
   allTanks[3] = tank3;
   allTanks[4] = tank4;
-  allTanks[5] = tank5; */
+  allTanks[5] = tank5; 
 }
 
 void draw()
