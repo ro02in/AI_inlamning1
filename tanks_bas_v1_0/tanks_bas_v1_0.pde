@@ -3,6 +3,8 @@
 // Variabelnamn har satts för att försöka överensstämma med exempelkoden.
 // Klassen Tank är minimal och skickas mer med som koncept(anrop/states/vektorer).
 
+import java.util.*;
+
 boolean left, right, up, down;
 boolean mouse_pressed;
 
@@ -118,11 +120,11 @@ void searchForEnemies() {
     if (!tank.name.equals("tank0")) // Remove to make all move around
       return;
     if (tank.state == 5)
-      return;
+      continue;
     if (tank.isEnemyBase()) {
-      if (tank.state != 5) {       // only reset path when first entering state 5
-        tank.pathCalculated = false;
-      }
+      Graph g = buildGraph(tank, tank.startpos);
+      List<Edge> path = g.findPathAStar(tank.position, tank.startpos);
+      tank.path = path;
       tank.state = 5;
       return;
     }
@@ -144,14 +146,7 @@ void updateTanksLogic() {
 }
 
 boolean canMoveForwards(Tank tank) {
-  float accel = 0.1;
-  float nextSpeed = tank.speed + accel;
-  if (nextSpeed > tank.maxspeed) nextSpeed = tank.maxspeed;
-
-  float nextVX = cos(tank.angle) * nextSpeed;
-  float nextVY = sin(tank.angle) * nextSpeed;
-
-  PVector nextPos = PVector.add(tank.position, new PVector(nextVX, nextVY));
+  PVector nextPos = tank.calculateNextPos();
 
   // "Spöktank"
   Sprite sprite = new Sprite();
@@ -174,6 +169,67 @@ boolean checkForCollisions(Sprite sprite) {
   if (sprite.checkForEnvironmentCollisions())
     return true;
   return false;
+}
+
+Graph buildGraph(Tank tank, PVector toPos) {
+  Graph g = new Graph();
+  g.nodes.add(toPos);
+  g.nodes.add(tank.position);
+  Set<Sprite> allObstacles = new HashSet<>();
+  Map<Sprite, List<PVector>> pointsForObstacles = new HashMap<>();
+  for (Tank tankToAdd : allTanks) {
+    if (tankToAdd.name.equals(tank.name))
+      continue;
+    allObstacles.add(tankToAdd);
+    pointsForObstacles.put(tankToAdd, new ArrayList<>());
+  }
+  for (Tree tree : allTrees) {
+    allObstacles.add(tree);
+    pointsForObstacles.put(tree, new ArrayList<>());
+  }
+
+  for (Sprite obstacle : allObstacles) {
+    List<Edge> obstacleEdgesFromTank = new Geometry().edgesBetweenPointAndSprite(tank.position, obstacle, tank.diameter / 2);
+    for (Edge e : obstacleEdgesFromTank) {
+      g.nodes.add(e.from);
+      g.nodes.add(e.toPos);
+      pointsForObstacles.get(obstacle).add(e.toPos);
+      g.edges.add(e);
+      g.edges.add(new Edge(e.toPos, e.from, e.cost));
+    }
+    List<Edge> obstacleEdgesFromToPos = new Geometry().edgesBetweenPointAndSprite(toPos, obstacle, tank.diameter / 2);
+    for (Edge e : obstacleEdgesFromToPos) {
+      g.nodes.add(e.from);
+      g.nodes.add(e.toPos);
+      pointsForObstacles.get(obstacle).add(e.toPos);
+      g.edges.add(e);
+      g.edges.add(new Edge(e.toPos, e.from, e.cost));
+    }
+    for (Sprite otherObstacle : allObstacles) {
+      if (obstacle.name.equals(otherObstacle.name))
+        continue;
+      List<Edge> obstacleEdges = new Geometry().tangentsBetweenSprites(obstacle, otherObstacle, tank.diameter / 2);
+      for (Edge e : obstacleEdges) {
+        g.nodes.add(e.from);
+        pointsForObstacles.get(obstacle).add(e.from);
+        g.nodes.add(e.toPos);
+        pointsForObstacles.get(otherObstacle).add(e.toPos);
+        g.edges.add(e);
+        g.edges.add(new Edge(e.toPos, e.from, e.cost));
+      }
+    }
+  }
+
+  for (Sprite obstacle : allObstacles) {
+    List<Edge> arcEdges = new Geometry().clockwiseArcEdgesOnSprite(obstacle, pointsForObstacles.get(obstacle), tank.diameter / 2);
+    for (Edge e : arcEdges) {
+      g.nodes.add(e.from);
+      g.nodes.add(e.toPos);
+      g.edges.add(e);
+    }
+  }
+
+  return g;
 }
 
 //======================================

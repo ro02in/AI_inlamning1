@@ -1,8 +1,5 @@
-import java.util.*;
-
 class Tank extends Sprite {
 
-  PVector acceleration;
   PVector velocity;
   
   PVector startpos;
@@ -10,21 +7,18 @@ class Tank extends Sprite {
   color col;
 
   float speed;
-  float maxspeed;
   float angle;  // Tanks direction
   
   int state;
   boolean isInTransition;
 
-  ArrayList<Node> astarPath = null;
-  int pathIndex = 0;
-  boolean pathCalculated = false;
-
   int turning; // -1 = turning left, 0 = not turning, 1 = turning right
   int stepsToNext = -1;
 
+  List<Edge> path;
+
   //======================================
-  Tank(String _name, PVector _startpos, float _size, color _col ) {
+  Tank(String _name, PVector _startpos, float _size, color _col) {
     println("*** Tank.Tank()");
     this.name         = _name;
     this.diameter     = _size;
@@ -33,17 +27,18 @@ class Tank extends Sprite {
     this.startpos     = new PVector(_startpos.x, _startpos.y);
     this.position     = new PVector(this.startpos.x, this.startpos.y);
     this.velocity     = new PVector(0, 0);
-    this.acceleration = new PVector(0, 0);
     
     this.state        = 0; //0(still), 1(moving)
     this.speed        = 0;
-    this.maxspeed     = 3;
     this.angle = 0;  // pointing right by default
     this.isInTransition = false;
+
+    this.path = new ArrayList<>();
   }
 
   //======================================
   void moveForward(){
+    speed = 3;
     println("*** Tank.moveForward()");
 
     if (stepsToNext < 0) {
@@ -57,9 +52,6 @@ class Tank extends Sprite {
     
     stepsToNext -=1 ;
 
-    float accel = 0.1;
-    speed += accel;
-    if (speed > maxspeed) speed = maxspeed;
     velocity.x = cos(angle) * speed;
     velocity.y = sin(angle) * speed;
   }
@@ -72,11 +64,16 @@ class Tank extends Sprite {
     } else {
       this.velocity.x = -this.maxspeed;  
     } */
-    float accel = 0.1;
-    speed -= accel;
-    if (speed < -maxspeed) speed = -maxspeed;
+    speed = -3;
     velocity.x = cos(angle) * speed;
     velocity.y = sin(angle) * speed;
+  }
+
+  PVector calculateNextPos() {
+    float nextVX = cos(angle) * 3;
+    float nextVY = sin(angle) * 3;
+
+    return PVector.add(position, new PVector(nextVX, nextVY));
   }
 
   void decideAndTurn() {
@@ -143,8 +140,9 @@ class Tank extends Sprite {
       case "stop": 
         stopMoving();
         break;
-      case "goBackToBaseAStar":
-        goBackToBaseAStar();
+      case "followPath":
+        followPath();
+        break;
     }
   }
   
@@ -172,65 +170,90 @@ class Tank extends Sprite {
         action("turnLeft");
         break;
       case 5:
-        action("goBackToBaseAStar");
+        action("followPath");
         break;
     }
     
-  this.position.add(velocity);
-  isHomeBase();
+    this.position.add(velocity);
+    isHomeBase();
   }
-  
 
-void goBackToBaseAStar() {
-  int gridSize = 20;
-
-  if (!pathCalculated) {
-    Node start = new Node(int(position.x / gridSize), int(position.y / gridSize));
-    Node goal  = new Node(int(75 / gridSize), int(175 / gridSize));
-
-    AStar astar = new AStar();
-    astarPath = astar.findPath(start, goal);
-    pathCalculated = true;
-    pathIndex = 0;
-
-    if (astarPath == null) {
-      println("No path found");
+  void followPath() {
+    if (path == null || path.isEmpty()) {
+      stopMoving();
+      state = 0;
       return;
     }
-    println("Path found");
-  }
 
-  if (astarPath == null) return;
+    Edge currentEdge = path.get(0);
+    if (currentEdge == null || currentEdge.toPos == null) {
+      path.remove(0);
+      stopMoving();
+      return;
+    }
 
-  if (pathIndex < astarPath.size()) {
-    Node target = astarPath.get(pathIndex);
-    float targetX = target.x * gridSize + gridSize / 2.0;
-    float targetY = target.y * gridSize + gridSize / 2.0;
+    speed = 3;
+    PVector target = currentEdge.toPos;
 
-    float dx = targetX - position.x;
-    float dy = targetY - position.y;
-    float dist = sqrt(dx * dx + dy * dy);
+    if (currentEdge.center != null) {
+      // Arc edge: walk along the circle around center
+      float arcAngle = atan2(position.y - currentEdge.center.y,
+                             position.x - currentEdge.center.x);
+      float goalAngle = atan2(target.y - currentEdge.center.y,
+                              target.x - currentEdge.center.x);
 
-    if (dist < 5) {
-      pathIndex++;
+      // How far left until we reach goalAngle (clockwise = negative delta)
+      float remaining = goalAngle - arcAngle;
+      // Normalize to (-PI, PI]
+      while (remaining >  PI) remaining -= TWO_PI;
+      while (remaining < -PI) remaining += TWO_PI;
+
+      if (abs(remaining) < 0.05f) {
+        // Close enough to the arc endpoint — snap and advance
+        position.set(target.x, target.y);
+        path.remove(0);
+        velocity.set(0, 0);
+        return;
+      }
+
+      // Step size in radians this frame
+      float stepRad = speed / currentEdge.radius;
+      // Move in the same direction as remaining, but don't overshoot
+      float move = (remaining > 0) ? min(stepRad, remaining) : max(-stepRad, remaining);
+      float newArcAngle = arcAngle + move;
+
+      // Tangent to the circle at current position = movement direction
+      angle = (move >= 0) ? newArcAngle + HALF_PI : newArcAngle - HALF_PI;
+
+      float nextX = currentEdge.center.x + currentEdge.radius * cos(newArcAngle);
+      float nextY = currentEdge.center.y + currentEdge.radius * sin(newArcAngle);
+      velocity.x = nextX - position.x;
+      velocity.y = nextY - position.y;
     } else {
+      // Straight-line edge
+      float dx = target.x - position.x;
+      float dy = target.y - position.y;
+      float dist = (float)Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 5f) {
+        path.remove(0);
+        if (path.isEmpty()) {
+          stopMoving();
+          state = 0;
+        }
+        return;
+      }
+
       angle = atan2(dy, dx);
-      speed += 0.1;
-      if (speed > maxspeed) speed = maxspeed;
       velocity.x = cos(angle) * speed;
       velocity.y = sin(angle) * speed;
     }
-  } else {
-    stopMoving();
-    state = 0;
-    pathCalculated = false;
   }
-}
 
   boolean isHomeBase() {
 
     if (this.position.x < 150 && this.position.y < 350){
-      println("i AM HOMW");
+      println("i AM HOME");
       return true;
     } else return false;
 
@@ -246,9 +269,9 @@ void goBackToBaseAStar() {
   return false;
 }
   
-  //====================================== 
+  //======================================
   void drawTank(float x, float y) {
-    fill(this.col, 50); 
+    fill(this.col, 50);
 
     ellipse(x, y, 50, 50);
     strokeWeight(1);
@@ -256,7 +279,7 @@ void goBackToBaseAStar() {
     
     //kanontornet
     ellipse(0, 0, 25, 25);
-    strokeWeight(3);   
+    strokeWeight(3);
     float cannon_length = this.diameter/2;
     line(0, 0, cannon_length, 0);
   }
@@ -287,19 +310,4 @@ void goBackToBaseAStar() {
       text(this.name + "\n" + posText, hudX + 5, hudY + 20);
   }
 
-}
-
-class Node {
-  int x, y;
-  float g, h, f;
-  Node parent;
-
-  Node(int x, int y) {
-    this.x = x;
-    this.y = y;
-    this.g = 0;
-    this.h = 0;
-    this.f = 0;
-    this.parent = null;
-  }
 }
