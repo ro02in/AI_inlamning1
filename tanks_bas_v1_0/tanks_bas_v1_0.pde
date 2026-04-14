@@ -185,18 +185,7 @@ boolean checkForCollisions(Sprite sprite) {
   return false;
 }
 
-//======================================
-// Följande bör ligga i klassen Team
-/* void displayHomeBase() {
-  strokeWeight(1);
-
-  fill(team0Color, 15);    // Base Team 0(red)
-  rect(0, 0, 150, 350);
-  
-  fill(team1Color, 15);    // Base Team 1(blue) 
-  rect(width - 151, height - 351, 150, 350);
-} */
-  
+//====================================== 
 // Följande bör ligga i klassen Tree
 void displayTrees() {
   imageMode(CENTER);
