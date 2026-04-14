@@ -50,7 +50,7 @@ class Tank extends Sprite {
     println("*** Tank.moveForward()");
 
     if (!moveWithKeys) {
-      if (stepsToNext < 0) stepsToNext = int(random(20, 50));
+      if (stepsToNext < 0) stepsToNext = int(random(40, 100));
       stepsToNext--;
       if (stepsToNext <= 0) {
         turning = (random(1) < 0.5) ? -1 : 1;
@@ -263,9 +263,6 @@ class Tank extends Sprite {
   //======================================
   void action(String _action) {
     println("*** Tank.action()");
-    if (state != 5) {
-      lookAhead();
-    }
 
     switch (_action) {
     case "move":
