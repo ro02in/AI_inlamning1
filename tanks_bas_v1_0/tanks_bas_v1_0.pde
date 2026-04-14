@@ -141,11 +141,8 @@ void searchForEnemies() {
       return;
     }
 
-    if (tank.turning == 0 && canMoveForwards(tank)) {
+    if (tank.turning == 0 && tank.canMoveForwards()) {
       tank.state = 1; // Forwards
-    } else {
-      tank.state = 0; // Still
-      tank.decideAndTurn();
     }
   }
 }
@@ -155,39 +152,6 @@ void updateTanksLogic() {
   for (Tank tank : allTanks) {
     tank.update();
   }
-}
-
-boolean canMoveForwards(Tank tank) {
-  float accel = 0.1;
-  float nextSpeed = tank.speed + accel;
-  if (nextSpeed > tank.maxspeed) nextSpeed = tank.maxspeed;
-
-  float nextVX = cos(tank.angle) * nextSpeed;
-  float nextVY = sin(tank.angle) * nextSpeed;
-
-  PVector nextPos = PVector.add(tank.position, new PVector(nextVX, nextVY));
-
-  // "Spöktank"
-  Sprite sprite = new Sprite();
-  sprite.position = nextPos;
-  sprite.diameter = tank.diameter;
-  sprite.name = tank.name; // Tillagd för att förhindra "spökkollision" med faktiska tanken
-
-  return !checkForCollisions(sprite);
-}
-
-boolean checkForCollisions(Sprite sprite) {
-  for (Tank tank : allTanks) {
-    if (sprite.checkForCollisions(tank))
-      return true;
-  }
-  for (Tree tree : allTrees) {
-    if (sprite.checkForCollisions(tree))
-      return true;
-  }
-  if (sprite.checkForEnvironmentCollisions())
-    return true;
-  return false;
 }
 
 //====================================== 
