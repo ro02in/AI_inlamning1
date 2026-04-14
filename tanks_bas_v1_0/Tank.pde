@@ -97,7 +97,7 @@ class Tank extends Sprite {
         }
         ObstacleType obstacleType = checkForObstacles(x, y);
         map.addToMap(x, y, obstacleType);
-        if (obstacleType != obstacleType.NONE) {
+        if (obstacleType != ObstacleType.NONE) {
           rayBlocked[i] = j;
           break;
         }
