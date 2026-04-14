@@ -267,20 +267,18 @@ class Tank extends Sprite {
   }
 
   boolean isHomeBase() {
-
-    if (this.position.x < 150 && this.position.y < 350) {
+    if (team0.isInsideBase(position)){    // Change this to proper teams later
       println("i AM HOME");
       return true;
-    } else return false;
+    }
+    return false;
   }
 
   boolean isEnemyBase() {
-    println("isEnemyBase metohd");
-    if (position.x > width - 150 && position.y > height - 350) {
-      println("ENEMY BASE FOUND!!!!!!!!!!!!!!!!!!!!!!!!!");
+    if (team1.isInsideBase(position)){    // Change this to proper teams later
+      println("AAAAAAAAAHHHHHHHHHHH");
       return true;
     }
-
     return false;
   }
 

@@ -19,6 +19,12 @@ class Team {
   color getColor() {
     return teamColor;
   }
+  boolean isInsideBase(PVector pos) {
+    return pos.x > baseX &&
+          pos.x < baseX + baseW &&
+          pos.y > baseY &&
+          pos.y < baseY + baseH;
+  }
 
   void display() {
     displayHomeBase();
