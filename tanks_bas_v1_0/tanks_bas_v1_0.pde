@@ -110,6 +110,11 @@ void draw()
   displayHomeBase();
   displayTrees();
   displayTanks();
+  for (Tank tank : allTanks) {
+      if (tank.state == 5){    // Astar state
+        tank.drawAstarPath();
+      }
+  }
   displayMap(tank0);
   
   displayGUI();

@@ -95,7 +95,7 @@ class Tank extends Sprite {
         }
         ObstacleType obstacleType = checkForObstacles(x, y);
         map.addToMap(x, y, obstacleType);
-        if (obstacleType != obstacleType.NONE) {
+        if (obstacleType != ObstacleType.NONE) {
           rayBlocked[i] = j;
           break;
         }
@@ -328,7 +328,7 @@ class Tank extends Sprite {
 
 
   void goBackToBaseAStar() {
-    int gridSize = 20;
+    int gridSize = map.cellSize;
 
     if (!pathCalculated) {
       Node start = new Node(int(position.x / gridSize), int(position.y / gridSize));
@@ -422,6 +422,19 @@ class Tank extends Sprite {
     line(0, 0, cannon_length, 0);
   }
 
+  void drawAstarPath() {
+    pushStyle();
+    stroke(0, 0, 255);  //blå
+    strokeWeight(1);
+    noFill();
+
+    for (Node n : astarPath) {
+      float x = n.x * map.cellSize + map.cellSize/2;
+      float y = n.y * map.cellSize + map.cellSize/2;
+      ellipse(x, y, 5, 5);
+    }
+    popStyle();
+  }
   void display() {
     fill(this.col);
     strokeWeight(1);
