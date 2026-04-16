@@ -42,7 +42,7 @@ class Tank extends Sprite {
     this.angle = 0;  // pointing right by default
     this.isInTransition = false;
     this.map = new Map(20);
-    map.addToMap(startpos.x, startpos.y, ObstacleType.NONE);
+    map.addToMap(startpos.x, startpos.y, ObstacleType.NONE, diameter/2);
   }
 
   //======================================
@@ -84,6 +84,7 @@ class Tank extends Sprite {
 
   void lookAhead() {
     float lookAngle = angle - 0.5;
+    boolean obstacleDetected = false;
     Integer[] rayBlocked = new Integer[5];
     for (int i = 0; i < 5; i++) {
       for (int j = 1; j < 5; j++) {
@@ -94,16 +95,26 @@ class Tank extends Sprite {
           break;
         }
         ObstacleType obstacleType = checkForObstacles(x, y);
-        map.addToMap(x, y, obstacleType);
+        Boolean addedObstacle = map.addToMap(x, y, obstacleType, diameter/2);
+        if (addedObstacle == null) {
+          rayBlocked[i] = j;
+        }
         if (obstacleType != ObstacleType.NONE) {
           rayBlocked[i] = j;
+          if (addedObstacle)
+            obstacleDetected = true;
           break;
         }
       }
       lookAngle += 0.25;
     }
 
-    if (state == 0 || state == 5) return; // Keep standing still if still
+    if (state == 0) return; // Keep standing still if still
+    if (state == 5) {
+      if (obstacleDetected)
+        pathCalculated = false; // Might need to find a new path upon a newly detected obstacle
+      return;
+    }
     if (moveWithKeys) return;
 
 
@@ -338,7 +349,7 @@ class Tank extends Sprite {
       AStar astar = new AStar(map, gridSize);
       astarPath = astar.findPath(start, goal);
       pathCalculated = true;
-      pathIndex = 0;
+      pathIndex = 1; // Start at second node in path to prevent jittering backwards
 
       if (astarPath == null) {
         println("Ingen väg hittad — tanken stannar.");
@@ -349,8 +360,8 @@ class Tank extends Sprite {
 
     if (astarPath == null) {
 
-      float targetX = 75;
-      float targetY = 175;
+      float targetX = startpos.x;
+      float targetY = startpos.y;
       float dx = targetX - position.x;
       float dy = targetY - position.y;
       float dist = sqrt(dx * dx + dy * dy);
@@ -428,11 +439,12 @@ class Tank extends Sprite {
     strokeWeight(1);
     noFill();
 
-    for (Node n : astarPath) {
+    for (int i = pathIndex; i < astarPath.size(); i++) {
+      Node n = astarPath.get(i);
       float x = n.x * map.cellSize + map.cellSize/2;
       float y = n.y * map.cellSize + map.cellSize/2;
       ellipse(x, y, 5, 5);
-    }
+  }
     popStyle();
   }
   void display() {

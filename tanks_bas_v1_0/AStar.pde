@@ -31,8 +31,7 @@ class AStar {
 
     if (c == null) return true;
 
-return c.obstacleType == ObstacleType.TREE ||
-         c.obstacleType == ObstacleType.TANK;
+    return c.obstacleType != ObstacleType.NONE;
   }
 
   PathNode getNode(ArrayList<PathNode> list, int x, int y) {
