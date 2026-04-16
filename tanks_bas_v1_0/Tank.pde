@@ -347,7 +347,10 @@ class Tank extends Sprite {
       Node goal = new Node(int(startpos.x / gridSize), int(startpos.y / gridSize));
 
       AStar astar = new AStar(map, gridSize);
-      astarPath = astar.findPath(start, goal);
+      astarPath = astar.findPath(start, goal, false);
+      if (astarPath == null) {
+        astarPath = astar.findPath(start, goal, true); // fallback to include unseen places on the map
+      }
       pathCalculated = true;
       pathIndex = 1; // Start at second node in path to prevent jittering backwards
 

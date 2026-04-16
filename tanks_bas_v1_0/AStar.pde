@@ -22,14 +22,14 @@ class AStar {
     this.gridSize = gridSize;
   }
 
-  boolean isObstacle(int gx, int gy) {
+  boolean isObstacle(int gx, int gy, boolean allowUnseen) {
 
     if (gx < 0 || gy < 0 || gx >= map.cols || gy >= map.rows)
       return true;
 
     Cell c = map.grid[gx][gy];
 
-    if (c == null) return true;
+    if (c == null) return !allowUnseen;
 
     return c.obstacleType != ObstacleType.NONE;
   }
@@ -41,7 +41,7 @@ class AStar {
     return null;
   }
 
-  ArrayList<Node> findPath(Node start, Node goal) {
+  ArrayList<Node> findPath(Node start, Node goal, boolean allowUnseen) {
 
     ArrayList<PathNode> openSet   = new ArrayList<PathNode>();
     ArrayList<PathNode> closedSet = new ArrayList<PathNode>();
@@ -85,7 +85,7 @@ class AStar {
         int nx = current.x + dir[0];
         int ny = current.y + dir[1];
 
-        if (isObstacle(nx, ny)) continue;
+        if (isObstacle(nx, ny, allowUnseen)) continue;
         if (getNode(closedSet, nx, ny) != null) continue;
 
         float moveCost = (dir[0] != 0 && dir[1] != 0) ? 1.414 : 1.0;
