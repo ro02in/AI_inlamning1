@@ -9,7 +9,7 @@ boolean mouse_pressed;
 PImage tree_img;
 PVector tree1_pos, tree2_pos, tree3_pos;
 
-Tree[] allTrees   = new Tree[3];
+ArrayList<Tree> allTrees = new ArrayList<Tree>();
 Tank[] allTanks   = new Tank[6];
 
 // Trees
@@ -56,9 +56,9 @@ void setup()
   tree2 = new Tree(tree_img, tree2_pos);
   tree3 = new Tree(tree_img, tree3_pos);
 
-  allTrees[0] = tree1;
-  allTrees[1] = tree2;
-  allTrees[2] = tree3;
+  allTrees.add(tree1);
+  allTrees.add(tree2);
+  allTrees.add(tree3);
   
   tank_size = 50;
   
@@ -199,9 +199,9 @@ void displayHomeBase() {
 // Följande bör ligga i klassen Tree
 void displayTrees() {
   imageMode(CENTER);
-  image(tree_img, tree1_pos.x, tree1_pos.y);
-  image(tree_img, tree2_pos.x, tree2_pos.y);
-  image(tree_img, tree3_pos.x, tree3_pos.y);
+  for (Tree tree : allTrees) {
+    image(tree_img, tree.position.x, tree.position.y);
+  }
   imageMode(CORNER);
 }
 
@@ -261,4 +261,11 @@ void keyReleased(){
     if (key == 'w' || key == 's' || key == 'a' || key == 'd') {
     tank0.state = 0;
   }
+}
+
+void mousePressed() {
+  PVector pos = new PVector(mouseX, mouseY);
+  Tree newTree = new Tree(tree_img, pos);
+  allTrees.add(newTree);
+  println("Debug: added tree at (" + mouseX + ", " + mouseY + ")");
 }
