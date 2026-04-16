@@ -1,8 +1,8 @@
 enum ObstacleType {
-    TREE(5),
-    NEAR_TREE(4),
-    TANK(3),
-    NEAR_TANK(2),
+    TREE(3),
+    NEAR_TREE(2),
+    TANK(1),
+    NEAR_TANK(1),
     NONE(1);
 
     private final int priority;
@@ -15,7 +15,11 @@ enum ObstacleType {
         return priority;
     }
 
+    // Type 1 should be the most recently seen obstacle type
     public static ObstacleType highestPriority(ObstacleType type1, ObstacleType type2) {
+        if (type1.getPriority() == type2.getPriority()) {
+            return type1;
+        }
         if (type1.getPriority() > type2.getPriority()) {
             return type1;
         } else {

@@ -20,7 +20,7 @@ class Map {
         boolean changed = false;
         Cell existingCell = grid[xCell][yCell];
         if (existingCell != null) {
-            ObstacleType prioritized = ObstacleType.highestPriority(existingCell.obstacleType, obstacleType);
+            ObstacleType prioritized = ObstacleType.highestPriority(obstacleType, existingCell.obstacleType);
             if (existingCell.obstacleType != prioritized) {
                 existingCell.obstacleType = prioritized;
                 changed = true;

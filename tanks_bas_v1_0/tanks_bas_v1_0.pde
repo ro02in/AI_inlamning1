@@ -125,7 +125,7 @@ void searchForEnemies() {
   for (Tank tank : allTanks) {
     if (moveWithKeys) return;
 
-    if (!tank.name.equals("tank0")) return; // Remove to make all move around
+    //if (!tank.name.equals("tank0")) return; // Remove to make all move around
 
     if (tank.state == 5) return;
 
