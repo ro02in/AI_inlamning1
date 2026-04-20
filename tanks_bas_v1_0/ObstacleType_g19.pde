@@ -1,3 +1,4 @@
+// Robin Karim, Oliwer Carpman, Rafal Galinski
 enum ObstacleType {
     TREE(3),
     NEAR_TREE(2),

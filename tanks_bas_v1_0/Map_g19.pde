@@ -1,3 +1,4 @@
+// Robin Karim, Oliwer Carpman, Rafal Galinski
 // Representation of a map with seen spaces on the map marked with obstacles
 class Map {
     int cols, rows;

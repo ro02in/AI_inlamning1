@@ -1,3 +1,4 @@
+// Robin Karim, Oliwer Carpman, Rafal Galinski
 public class Sprite {
   PVector position;
   float   diameter;

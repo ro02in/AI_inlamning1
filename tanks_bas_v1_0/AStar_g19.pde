@@ -1,4 +1,5 @@
-//inspo from source https://www.geeksforgeeks.org/dsa/a-search-algorithm/
+// Robin Karim, Oliwer Carpman, Rafal Galinski
+// inspo from source https://www.geeksforgeeks.org/dsa/a-search-algorithm/
 
 class AStar {
   Map map;

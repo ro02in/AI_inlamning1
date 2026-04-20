@@ -1,3 +1,5 @@
+// Robin Karim, Oliwer Carpman, Rafal Galinski
+// Ska uppdateras senare till uppgift 2
 class Tree extends Sprite {
   
   PImage  img;

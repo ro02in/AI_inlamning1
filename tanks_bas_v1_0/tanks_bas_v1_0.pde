@@ -1,7 +1,5 @@
-// Följande kan användas som bas inför uppgiften.
-// Syftet är att sammanställa alla varabelvärden i scenariet.
-// Variabelnamn har satts för att försöka överensstämma med exempelkoden.
-// Klassen Tank är minimal och skickas mer med som koncept(anrop/states/vektorer).
+// Robin Karim, Oliwer Carpman, Rafal Galinski
+// Main class
 
 import java.util.*;
 
