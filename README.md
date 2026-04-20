@@ -29,4 +29,4 @@ Saker vi inte fått till:
 Kända buggar:
 En tank i A-star läge svänger inte, utan direkt åker i rätt riktning
 
-Det kan förekomma att en tank kan fastna i astar läge ifall den försöker åka för nära ett träd
+Om A-star inte hittar en väg tillbaka bland kända och okända celler kraschar programmet
