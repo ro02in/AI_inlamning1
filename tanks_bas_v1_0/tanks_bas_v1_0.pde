@@ -263,8 +263,10 @@ void keyReleased(){
 }
 
 void mousePressed() {
-  PVector pos = new PVector(mouseX, mouseY);
-  Tree newTree = new Tree(tree_img, pos);
-  allTrees.add(newTree);
-  println("Debug: added tree at (" + mouseX + ", " + mouseY + ")");
+  if (pause){
+    PVector pos = new PVector(mouseX, mouseY);
+    Tree newTree = new Tree(tree_img, pos);
+    allTrees.add(newTree);
+    println("Debug: added tree at (" + mouseX + ", " + mouseY + ")");
+  }
 }
