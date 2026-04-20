@@ -5,6 +5,7 @@ Instruktioner för att köra programmet.
 Något om processing.
 
 När programmet körs har man 3 knappar.
+    
     1 startar en ai som automatiskt letar eftermotståendebasen. När den befinner sig med mer än 50% av sin egen längd i motståendebasen går den till A-star läge, och hittar en väg tillbaka till sin startpunkt.
 
     2 startar manuellt kontrolläge
