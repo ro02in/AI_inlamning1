@@ -1,5 +1,3 @@
-import java.util.*;
-
 class Tank extends Sprite {
 
   PVector acceleration;
@@ -21,7 +19,7 @@ class Tank extends Sprite {
   boolean pathCalculated = false;
 
   int turning; // -1 = turning left, 0 = not turning, 1 = turning right
-  int stepsToNext = -1;
+  int stepsToNext = -1; // steps until next turn
 
   Map map;
 
@@ -76,6 +74,12 @@ class Tank extends Sprite {
     velocity.y = sin(angle) * speed;
   }
 
+  /**
+  * Look at the space ahead of the tank in a triangular pattern (meant to replicate field of view)
+  * Adds the seen space into this tank's map - marking obstacles etc.
+  * When an obstacle is seen, the tank slows down slightly and might turn to avoid the obstacle.
+  * For example, a tree seen on the left side of the tanks FOV will make it turn right.
+  */
   void lookAhead() {
     float lookAngle = angle - 0.5;
     boolean obstacleDetected = false;
@@ -140,7 +144,7 @@ class Tank extends Sprite {
     boolean leftOpen = (left == 5);
     boolean rightOpen = (right == 5);
 
-    // Both blocked close, reverse
+    // Both blocked close, reverse. Note: this doesn't work at the moment but the problem is not yet identified.
     if (left < 2 && right < 2) {
       if (canMoveBackwards()) {
         state = 2;
@@ -159,6 +163,7 @@ class Tank extends Sprite {
     stepsToNext = int(random(10, 30));
   }
 
+  // Checks if this tank can move forwards
   boolean canMoveForwards() {
     float accel = 0.1;
     float nextSpeed = speed + accel;
@@ -178,6 +183,7 @@ class Tank extends Sprite {
     return !sprite.checkForGlobalCollisions();
   }
 
+  // Checks if this tank can move backwards
   boolean canMoveBackwards() {
     float accel = 0.1;
     float nextSpeed = speed - accel;
@@ -197,6 +203,7 @@ class Tank extends Sprite {
     return !sprite.checkForGlobalCollisions();
   }
 
+  // Checks if this tank can move with the current velocity
   boolean canMove(PVector vel) {
     PVector nextPos = PVector.add(position, vel);
     Sprite sprite = new Sprite();
@@ -206,6 +213,7 @@ class Tank extends Sprite {
     return !sprite.checkForGlobalCollisions();
   }
 
+  // Check for obstacles at a position
   ObstacleType checkForObstacles(float x, float y) {
     for (Tree tree : allTrees) {
       if (tree.checkForCollisions(new PVector(x, y))) {
@@ -221,6 +229,7 @@ class Tank extends Sprite {
     return ObstacleType.NONE;
   }
 
+  // Decide where to turn if stepstonext is at 0. Then/otherwise turn in the current direction.
   void decideAndTurn() {
     if (stepsToNext < 0 || stepsToNext > 20) {
       stepsToNext = int(random(10, 20));
@@ -327,10 +336,16 @@ class Tank extends Sprite {
     }
 
     this.position.add(velocity);
-    isHomeBase();
   }
 
-
+  /**
+  * Called when the enemy base is found or when the current calculated path is blocked.
+  * Calculates a path to this tanks starting position using A* over all seen positions on the tanks map.
+  * If a path is already calculated, trace the path back towards the home base.
+  * If no path can be found with the current map, a path is instead calculated including unseen spaces on the map
+  * but keeping all obstacles marked from the current map.
+  * If no path can be found then - the game does the only sensible thing and crashes.
+  */
   void goBackToBaseAStar() {
     int gridSize = map.cellSize;
 
@@ -399,14 +414,8 @@ class Tank extends Sprite {
     }
   }
 
-  boolean isHomeBase() {
-    if (this.position.x < 150 && this.position.y < 350) {
-      return true;
-    } else return false;
-  }
-
+  // Checks if the tank is in the enemy base
   boolean isEnemyBase() {
-    println("isEnemyBase metohd");
     if (position.x > width - 150 && position.y > height - 350) {
       return true;
     }

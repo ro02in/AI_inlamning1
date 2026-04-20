@@ -3,6 +3,8 @@
 // Variabelnamn har satts för att försöka överensstämma med exempelkoden.
 // Klassen Tank är minimal och skickas mer med som koncept(anrop/states/vektorer).
 
+import java.util.*;
+
 boolean left, right, up, down;
 boolean mouse_pressed;
 
