@@ -15,8 +15,4 @@ När programmet körs har man 3 knappar.
     
     p pausar all rörelse, eller startar det igen. Ifall det trycks först startar tanken i läge 1.
 
-    Det går dessutom att trycka med musknappen för att skapa ett nytt träd
-
-
-
 Saker vi inte fått till och kända buggar:
