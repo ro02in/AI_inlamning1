@@ -1,7 +1,7 @@
 class Team {
   
   
-  // Används inte, men bör ligga här. 
+  // Används inte, men bör ligga här.
   void displayHomeBase() {
   }
   

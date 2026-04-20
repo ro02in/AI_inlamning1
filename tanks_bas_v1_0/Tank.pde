@@ -69,12 +69,6 @@ class Tank extends Sprite {
   }
 
   void moveBackward() {
-
-    /* if (this.velocity.x > -this.maxspeed) {
-    this.velocity.x -= 0.01;
-    } else {
-    this.velocity.x = -this.maxspeed;
-     } */
     float accel = 0.1;
     speed -= accel;
     if (speed < -maxspeed) speed = -maxspeed;
@@ -302,7 +296,6 @@ class Tank extends Sprite {
   }
 
   //======================================
-  //Här är det tänkt att agenten har möjlighet till egna val.
 
   void update() {
     lookAhead();
@@ -472,7 +465,6 @@ class Tank extends Sprite {
     fill(30);
     textSize(15);
     String posText = String.format(Locale.US, "(%.2f, %.2f)", this.position.x, this.position.y);
-    //text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", this.position.x+25+5, this.position.y-5-5);
     text(this.name + "\n" + posText, hudX + 5, hudY + 20);
   }
 }
