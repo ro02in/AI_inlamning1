@@ -27,7 +27,6 @@ class Tank extends Sprite {
 
   //======================================
   Tank(String _name, PVector _startpos, float _size, color _col ) {
-    println("*** Tank.Tank()");
     this.name         = _name;
     this.diameter     = _size;
     this.col          = _col;
@@ -43,6 +42,7 @@ class Tank extends Sprite {
     this.angle = 0;  // pointing right by default
     this.isInTransition = false;
     this.map = new Map(20);
+    map.addToMap(startpos.x, startpos.y, ObstacleType.NONE, diameter/2);
   }
 
   //======================================
@@ -50,7 +50,7 @@ class Tank extends Sprite {
     println("*** Tank.moveForward()");
 
     if (!moveWithKeys) {
-      if (stepsToNext < 0) stepsToNext = int(random(20, 50));
+      if (stepsToNext < 0) stepsToNext = int(random(40, 100));
       stepsToNext--;
       if (stepsToNext <= 0) {
         turning = (random(1) < 0.5) ? -1 : 1;
@@ -58,6 +58,7 @@ class Tank extends Sprite {
         stepsToNext = int(random(10, 30));
         return;
       }
+      stepsToNext -=1;
     }
 
     float accel = 0.1;
@@ -68,13 +69,6 @@ class Tank extends Sprite {
   }
 
   void moveBackward() {
-    println("*** Tank.moveBackward()");
-
-    /* if (this.velocity.x > -this.maxspeed) {
-    this.velocity.x -= 0.01;
-    } else {
-    this.velocity.x = -this.maxspeed;
-     } */
     float accel = 0.1;
     speed -= accel;
     if (speed < -maxspeed) speed = -maxspeed;
@@ -84,6 +78,7 @@ class Tank extends Sprite {
 
   void lookAhead() {
     float lookAngle = angle - 0.5;
+    boolean obstacleDetected = false;
     Integer[] rayBlocked = new Integer[5];
     for (int i = 0; i < 5; i++) {
       for (int j = 1; j < 5; j++) {
@@ -94,16 +89,28 @@ class Tank extends Sprite {
           break;
         }
         ObstacleType obstacleType = checkForObstacles(x, y);
-        map.addToMap(x, y, obstacleType);
-        if (obstacleType != obstacleType.NONE) {
+        Boolean addedObstacle = map.addToMap(x, y, obstacleType, diameter/2);
+        if (addedObstacle == null) {
           rayBlocked[i] = j;
+        }
+        if (obstacleType != ObstacleType.NONE) {
+          rayBlocked[i] = j;
+          if (addedObstacle)
+            obstacleDetected = true;
           break;
         }
       }
       lookAngle += 0.25;
     }
+
     if (state == 0) return; // Keep standing still if still
+    if (state == 5) {
+      if (obstacleDetected)
+        pathCalculated = false; // Might need to find a new path upon a newly detected obstacle
+      return;
+    }
     if (moveWithKeys) return;
+
 
     // If committed to a turn, keep going until done
     if (turning != 0) {
@@ -253,7 +260,6 @@ class Tank extends Sprite {
   }
 
   void stopMoving() {
-    println("*** Tank.stopMoving()");
 
     // hade varit finare med animering!
     speed = 0;
@@ -262,7 +268,9 @@ class Tank extends Sprite {
 
   //======================================
   void action(String _action) {
-    println("*** Tank.action()");
+    if (state != 5) {
+      lookAhead();
+    }
 
     switch (_action) {
     case "move":
@@ -288,13 +296,9 @@ class Tank extends Sprite {
   }
 
   //======================================
-  //Här är det tänkt att agenten har möjlighet till egna val.
 
   void update() {
-    println("*** Tank.update()");
-
-    if (state != 5)
-      lookAhead();
+    lookAhead();
 
     switch (state) {
     case 0:
@@ -328,33 +332,50 @@ class Tank extends Sprite {
 
 
   void goBackToBaseAStar() {
-    int gridSize = 20;
+    int gridSize = map.cellSize;
 
     if (!pathCalculated) {
       Node start = new Node(int(position.x / gridSize), int(position.y / gridSize));
-      Node goal  = new Node(int(startpos.x  / gridSize), int(startpos.y / gridSize));
 
-      ArrayList<PVector> obstacles = new ArrayList<PVector>();
-      obstacles.add(tree1_pos);
-      obstacles.add(tree2_pos);
-      obstacles.add(tree3_pos);
+      Node goal = new Node(int(startpos.x / gridSize), int(startpos.y / gridSize));
 
-      AStar astar = new AStar(obstacles, gridSize);
-      astarPath = astar.findPath(start, goal);
+      AStar astar = new AStar(map, gridSize);
+      astarPath = astar.findPath(start, goal, false);
+      if (astarPath == null) {
+        astarPath = astar.findPath(start, goal, true); // fallback to include unseen places on the map
+      }
       pathCalculated = true;
-      pathIndex = 0;
+      pathIndex = 1; // Start at second node in path to prevent jittering backwards
+
+      if (astarPath == null) {
+        println("Ingen väg hittad — tanken stannar.");
+      } else {
+        println("Väg hittad, antal steg: " + astarPath.size());
+      }
     }
 
     if (astarPath == null) {
-      println("No path found");
+
+      float targetX = startpos.x;
+      float targetY = startpos.y;
+      float dx = targetX - position.x;
+      float dy = targetY - position.y;
+      float dist = sqrt(dx * dx + dy * dy);
+      if (dist > 5) {
+        angle = atan2(dy, dx);
+        speed += 0.1;
+        if (speed > maxspeed) speed = maxspeed;
+        velocity.x = cos(angle) * speed;
+        velocity.y = sin(angle) * speed;
+      } else {
+        stopMoving();
+        state = 0;
+      }
       return;
     }
-    println("Path found");
-
-    if (astarPath == null) return;
 
     if (pathIndex < astarPath.size()) {
-      Node target = astarPath.get(pathIndex);
+      Node target  = astarPath.get(pathIndex);
       float targetX = target.x * gridSize + gridSize / 2.0;
       float targetY = target.y * gridSize + gridSize / 2.0;
 
@@ -379,9 +400,7 @@ class Tank extends Sprite {
   }
 
   boolean isHomeBase() {
-
     if (this.position.x < 150 && this.position.y < 350) {
-      println("i AM HOME");
       return true;
     } else return false;
   }
@@ -389,7 +408,6 @@ class Tank extends Sprite {
   boolean isEnemyBase() {
     println("isEnemyBase metohd");
     if (position.x > width - 150 && position.y > height - 350) {
-      println("ENEMY BASE FOUND!!!!!!!!!!!!!!!!!!!!!!!!!");
       return true;
     }
 
@@ -411,6 +429,20 @@ class Tank extends Sprite {
     line(0, 0, cannon_length, 0);
   }
 
+  void drawAstarPath() {
+    pushStyle();
+    stroke(0, 0, 255);  //blå
+    strokeWeight(1);
+    noFill();
+
+    for (int i = pathIndex; i < astarPath.size(); i++) {
+      Node n = astarPath.get(i);
+      float x = n.x * map.cellSize + map.cellSize/2;
+      float y = n.y * map.cellSize + map.cellSize/2;
+      ellipse(x, y, 5, 5);
+  }
+    popStyle();
+  }
   void display() {
     fill(this.col);
     strokeWeight(1);
@@ -433,7 +465,6 @@ class Tank extends Sprite {
     fill(30);
     textSize(15);
     String posText = String.format(Locale.US, "(%.2f, %.2f)", this.position.x, this.position.y);
-    //text(this.name +"\n( " + this.position.x + ", " + this.position.y + " )", this.position.x+25+5, this.position.y-5-5);
     text(this.name + "\n" + posText, hudX + 5, hudY + 20);
   }
 }

@@ -3,56 +3,72 @@
 import java.util.*;
 
 class AStar {
-  ArrayList<PVector> obstacles;
+  Map map;
   int gridSize;
 
-  AStar(ArrayList<PVector> obstacles, int gridSize){
-    this.obstacles = obstacles;
+  class PathNode {
+    int x, y;
+    float g, h, f;
+    PathNode parent;
+
+    PathNode(int x, int y) {
+      this.x = x;
+      this.y = y;
+    }
+  }
+
+  AStar(Map map, int gridSize) {
+    this.map = map;
     this.gridSize = gridSize;
   }
 
-  boolean isObstacle(int gx, int gy) {
-    float wx = gx * gridSize + gridSize / 2.0;
-    float wy = gy * gridSize + gridSize / 2.0;
-    for (PVector obs : obstacles) {
-      float dx = wx - obs.x;
-      float dy = wy - obs.y;
-      if (sqrt(dx*dx + dy*dy) < gridSize * 1.5) return true;
-    }
-    return false;
+  boolean isObstacle(int gx, int gy, boolean allowUnseen) {
+
+    if (gx < 0 || gy < 0 || gx >= map.cols || gy >= map.rows)
+      return true;
+
+    Cell c = map.grid[gx][gy];
+
+    if (c == null) return !allowUnseen;
+
+    return c.obstacleType != ObstacleType.NONE;
   }
 
-  ArrayList<Node> findPath(Node start, Node goal) {
+  PathNode getNode(ArrayList<PathNode> list, int x, int y) {
+    for (PathNode n : list) {
+      if (n.x == x && n.y == y) return n;
+    }
+    return null;
+  }
 
-    ArrayList<Node> openSet = new ArrayList<Node>();
-    ArrayList<Node> closedSet = new ArrayList<Node>();
+  ArrayList<Node> findPath(Node start, Node goal, boolean allowUnseen) {
 
-    start.g = 0;
-    start.h = heuristic(start, goal);
-    start.f = start.g + start.h;
+    ArrayList<PathNode> openSet   = new ArrayList<PathNode>();
+    ArrayList<PathNode> closedSet = new ArrayList<PathNode>();
 
-    openSet.add(start);
+    PathNode startN = new PathNode(start.x, start.y);
+    PathNode goalN  = new PathNode(goal.x,  goal.y);
+
+    startN.g = 0;
+    startN.h = heuristic(startN, goalN);
+    startN.f = startN.g + startN.h;
+
+    openSet.add(startN);
 
     while (!openSet.isEmpty()) {
 
-      Node current = openSet.get(0);
-
-      for (Node n : openSet) {
-        if (n.f < current.f) {
-          current = n;
-        }
+      PathNode current = openSet.get(0);
+      for (PathNode n : openSet) {
+        if (n.f < current.f) current = n;
       }
 
-      if (current.x == goal.x && current.y == goal.y) {
-
+      if (current.x == goalN.x && current.y == goalN.y) {
         ArrayList<Node> path = new ArrayList<Node>();
-        Node temp = current;
-
+        PathNode temp = current;
         while (temp != null) {
-          path.add(temp);
+          path.add(new Node(temp.x, temp.y));
           temp = temp.parent;
         }
-
         Collections.reverse(path);
         return path;
       }
@@ -61,56 +77,33 @@ class AStar {
       closedSet.add(current);
 
       int[][] directions = {
-        {1,0},{-1,0},{0,1},{0,-1}
+        {1,0},{-1,0},{0,1},{0,-1},
+        {1,1},{-1,1},{1,-1},{-1,-1}
       };
 
       for (int[] dir : directions) {
-
         int nx = current.x + dir[0];
         int ny = current.y + dir[1];
 
-        int cols = width / 20;
-        int rows = height / 20;
+        if (isObstacle(nx, ny, allowUnseen)) continue;
+        if (getNode(closedSet, nx, ny) != null) continue;
 
-        if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) {
-          continue;
-        }
+        float moveCost = (dir[0] != 0 && dir[1] != 0) ? 1.414 : 1.0;
+        float tentativeG = current.g + moveCost;
 
-        Node neighbor = new Node(nx, ny);
+        PathNode neighbor = getNode(openSet, nx, ny);
 
-        boolean skip = false;
-
-        for (Node n : closedSet) {
-          if (n.x == neighbor.x && n.y == neighbor.y) {
-            skip = true;
-            break;
-          }
-        }
-
-        if (skip) continue;
-
-        float tentativeG = current.g + 1;
-
-        boolean inOpen = false;
-
-        for (Node n : openSet) {
-          if (n.x == neighbor.x && n.y == neighbor.y) {
-            neighbor = n;
-            inOpen = true;
-            break;
-          }
-        }
-
-        if (!inOpen || tentativeG < neighbor.g) {
-
+        if (neighbor == null) {
+          neighbor       = new PathNode(nx, ny);
+          neighbor.g     = tentativeG;
+          neighbor.h     = heuristic(neighbor, goalN);
+          neighbor.f     = neighbor.g + neighbor.h;
           neighbor.parent = current;
-          neighbor.g = tentativeG;
-          neighbor.h = heuristic(neighbor, goal);
-          neighbor.f = neighbor.g + neighbor.h;
-
-          if (!inOpen) {
-            openSet.add(neighbor);
-          }
+          openSet.add(neighbor);
+        } else if (tentativeG < neighbor.g) {
+          neighbor.parent = current;
+          neighbor.g      = tentativeG;
+          neighbor.f      = neighbor.g + neighbor.h;
         }
       }
     }
@@ -118,7 +111,9 @@ class AStar {
     return null;
   }
 
-  float heuristic(Node a, Node b) {
-    return abs(a.x - b.x) + abs(a.y - b.y);
+  float heuristic(PathNode a, PathNode b) {
+    float dx = abs(a.x - b.x);
+    float dy = abs(a.y - b.y);
+    return max(dx, dy) + (1.414 - 1) * min(dx, dy);
   }
 }

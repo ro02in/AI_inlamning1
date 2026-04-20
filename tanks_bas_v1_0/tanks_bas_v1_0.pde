@@ -9,7 +9,7 @@ boolean mouse_pressed;
 PImage tree_img;
 PVector tree1_pos, tree2_pos, tree3_pos;
 
-Tree[] allTrees   = new Tree[3];
+ArrayList<Tree> allTrees = new ArrayList<Tree>();
 Tank[] allTanks   = new Tank[6];
 
 // Trees
@@ -56,9 +56,9 @@ void setup()
   tree2 = new Tree(tree_img, tree2_pos);
   tree3 = new Tree(tree_img, tree3_pos);
 
-  allTrees[0] = tree1;
-  allTrees[1] = tree2;
-  allTrees[2] = tree3;
+  allTrees.add(tree1);
+  allTrees.add(tree2);
+  allTrees.add(tree3);
   
   tank_size = 50;
   
@@ -102,6 +102,7 @@ void draw()
 
     // UPDATE LOGIC
     updateTanksLogic();
+    println(tank0.state);
   
   }
   
@@ -109,6 +110,11 @@ void draw()
   displayHomeBase();
   displayTrees();
   displayTanks();
+  for (Tank tank : allTanks) {
+      if (tank.state == 5){    // Astar state
+        tank.drawAstarPath();
+      }
+  }
   displayMap(tank0);
   
   displayGUI();
@@ -117,23 +123,23 @@ void draw()
 //======================================
 void searchForEnemies() {
   for (Tank tank : allTanks) {
-    if(moveWithKeys){
-      return;
-    }
-    if (!tank.name.equals("tank0")) // Remove to make all move around
-      return;
-    if (tank.state == 5)
-      return;
+    if (moveWithKeys) return;
+
+    if (!tank.name.equals("tank0")) return; // Remove to make all move around
+
+    if (tank.state == 5) return;
+
     if (tank.isEnemyBase()) {
       if (tank.state != 5) {       // only reset path when first entering state 5
         tank.pathCalculated = false;
+        tank.astarPath = null;
       }
       tank.state = 5;
       return;
     }
 
-    if (tank.turning == 0 && tank.canMoveForwards()) {
-      tank.state = 1; // Forwards
+    if (tank.turning == 0 && canMoveForwards(tank)) {
+      tank.state = 1;
     }
   }
 }
@@ -145,8 +151,40 @@ void updateTanksLogic() {
   }
 }
 
+boolean canMoveForwards(Tank tank) {
+  float accel = 0.1;
+  float nextSpeed = tank.speed + accel;
+  if (nextSpeed > tank.maxspeed) nextSpeed = tank.maxspeed;
+
+  float nextVX = cos(tank.angle) * nextSpeed;
+  float nextVY = sin(tank.angle) * nextSpeed;
+
+  PVector nextPos = PVector.add(tank.position, new PVector(nextVX, nextVY));
+
+  // "Spöktank"
+  Sprite sprite = new Sprite();
+  sprite.position = nextPos;
+  sprite.diameter = tank.diameter;
+  sprite.name = tank.name; // Tillagd för att förhindra "spökkollision" med faktiska tanken
+
+  return !checkForCollisions(sprite);
+}
+
+boolean checkForCollisions(Sprite sprite) {
+  for (Tank tank : allTanks) {
+    if (sprite.checkForCollisions(tank))
+      return true;
+  }
+  for (Tree tree : allTrees) {
+    if (sprite.checkForCollisions(tree))
+      return true;
+  }
+  if (sprite.checkForEnvironmentCollisions())
+    return true;
+  return false;
+}
+
 //======================================
-// Följande bör ligga i klassen Team
 void displayHomeBase() {
   strokeWeight(1);
 
@@ -157,12 +195,11 @@ void displayHomeBase() {
   rect(width - 151, height - 351, 150, 350);
 }
   
-// Följande bör ligga i klassen Tree
 void displayTrees() {
   imageMode(CENTER);
-  image(tree_img, tree1_pos.x, tree1_pos.y);
-  image(tree_img, tree2_pos.x, tree2_pos.y);
-  image(tree_img, tree3_pos.x, tree3_pos.y);
+  for (Tree tree : allTrees) {
+    image(tree_img, tree.position.x, tree.position.y);
+  }
   imageMode(CORNER);
 }
 
@@ -222,4 +259,11 @@ void keyReleased(){
     if (key == 'w' || key == 's' || key == 'a' || key == 'd') {
     tank0.state = 0;
   }
+}
+
+void mousePressed() {
+  PVector pos = new PVector(mouseX, mouseY);
+  Tree newTree = new Tree(tree_img, pos);
+  allTrees.add(newTree);
+  println("Debug: added tree at (" + mouseX + ", " + mouseY + ")");
 }
