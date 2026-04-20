@@ -20,6 +20,7 @@ public class Sprite {
     return borders();
   }
 
+  // Checks for collisions with another sprite
   boolean checkForCollisions(Sprite sprite) {
     if (sprite.equals(this) || sprite.name.equals(this.name))
       return false;
@@ -34,6 +35,7 @@ public class Sprite {
     return false;
   }
 
+  // Checks for collisions at a position
   boolean checkForCollisions(PVector position) {
     float r = diameter/2;
     if (
@@ -45,6 +47,7 @@ public class Sprite {
     return false;
   }
   
+  // Check for collisions globally with all other tanks and trees
   boolean checkForGlobalCollisions() {
     for (Tank tank : allTanks) {
       if (checkForCollisions(tank))
@@ -59,6 +62,7 @@ public class Sprite {
     return false;
   }
   
+  // Checks for collisions with the border
   boolean borders() {
     float r = diameter/2;
     if (position.x < r) return true;

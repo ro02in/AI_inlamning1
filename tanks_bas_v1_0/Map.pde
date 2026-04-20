@@ -1,3 +1,4 @@
+// Representation of a map with seen spaces on the map marked with obstacles
 class Map {
     int cols, rows;
     int cellSize;
@@ -10,7 +11,10 @@ class Map {
         grid = new Cell[cols][rows];
     }
 
-    // Returns null if x and y is outside the map, otherwise true if a new obstacle is added
+    /**
+    * Marks a position to the map with the current observed obstacletype (which includes empty spaces).
+    * Returns null if x and y is outside the map, otherwise true if a new obstacle is added, false if not
+    */
     Boolean addToMap(float x, float y, ObstacleType obstacleType, float tankRadius) {
         int xCell = int(x / cellSize);
         int yCell = int(y / cellSize);
@@ -41,6 +45,7 @@ class Map {
         return changed;
     }
 
+    // Adds a space near an obstacle within the tanks radius, marking it obstructed for A star algorithm since moving into it will cause collision.
     void addNearObstacle(int xCell, int yCell, float tankRadius, ObstacleType obstacleType) {
         float rCells = tankRadius / cellSize;
         int range = floor(rCells);
@@ -99,6 +104,7 @@ class Map {
     }
 }
 
+// Cell could have been replaced with just obstacletype, but this provides a structure for adding costs etc. to cells.
 class Cell {
     ObstacleType obstacleType;
 
