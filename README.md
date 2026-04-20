@@ -30,3 +30,6 @@ Kända buggar:
 En tank i A-star läge svänger inte, utan direkt åker i rätt riktning
 
 Om A-star inte hittar en väg tillbaka bland kända och okända celler kraschar programmet
+
+Länk till Github repositorie:
+    https://github.com/ro02in/AI_inlamning1.git
