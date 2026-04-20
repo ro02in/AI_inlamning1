@@ -20,6 +20,8 @@ class AStar {
     this.gridSize = gridSize;
   }
 
+  // Checks if a cell in the provided map is an obstacle or not.
+  // If allowUnseen is false, unseen cells are marked as obstacles - otherwise not.
   boolean isObstacle(int gx, int gy, boolean allowUnseen) {
 
     if (gx < 0 || gy < 0 || gx >= map.cols || gy >= map.rows)
@@ -39,10 +41,11 @@ class AStar {
     return null;
   }
 
+  // Finds a path from a start node to a goal node using A star search algorithm.
   ArrayList<Node> findPath(Node start, Node goal, boolean allowUnseen) {
 
-    ArrayList<PathNode> openSet   = new ArrayList<PathNode>();
-    ArrayList<PathNode> closedSet = new ArrayList<PathNode>();
+    ArrayList<PathNode> openSet   = new ArrayList<PathNode>(); // Nodes we can reach, but do not yet know lowest cost to
+    ArrayList<PathNode> closedSet = new ArrayList<PathNode>(); // Nodes we can reach and know lowest cost to
 
     PathNode startN = new PathNode(start.x, start.y);
     PathNode goalN  = new PathNode(goal.x,  goal.y);
@@ -74,6 +77,7 @@ class AStar {
       openSet.remove(current);
       closedSet.add(current);
 
+      // Can move up, down, left, right and diagonally
       int[][] directions = {
         {1,0},{-1,0},{0,1},{0,-1},
         {1,1},{-1,1},{1,-1},{-1,-1}
@@ -109,6 +113,7 @@ class AStar {
     return null;
   }
 
+  // Octile distance
   float heuristic(PathNode a, PathNode b) {
     float dx = abs(a.x - b.x);
     float dy = abs(a.y - b.y);
