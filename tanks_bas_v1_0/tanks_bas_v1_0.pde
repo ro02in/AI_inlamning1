@@ -247,17 +247,17 @@ void keyPressed(){
   if(!moveWithKeys){return;}
 
     if (key == 'w') tank0.state = 1;
-    if (key == 'a') tank0.state = 4;
+    if (key == 'a') tank0.turnLeft();
     if (key == 's') tank0.state = 2;
-    if (key == 'd') tank0.state = 3;
+    if (key == 'd') tank0.turnRight();
 }
 
 void keyReleased(){
   if(!moveWithKeys){return;}
 
-    if (key == 'w' || key == 's' || key == 'a' || key == 'd') {
-    tank0.state = 0;
-  }
+    if (key == 'w' || key == 's') {
+      tank0.state = 0;
+    }
 }
 
 void mousePressed() {
