@@ -19,6 +19,9 @@ class Radio {
 
     void receiveRadio(PVector position, ObstacleType obstacleType, Team team) {
         if (!isOn) return;
-        tank.map.addToMap(position.x, position.y, obstacleType, tank.diameter / 2);
+        tank.map.addToMap(position.x, position.y, ObstacleType.toReportedType(obstacleType), tank.diameter / 2);
+        if (obstacleType == ObstacleType.ENEMY_TANK) {
+            tank.beginGoToPositionAStar(position);
+        }
     }
 }

@@ -38,6 +38,8 @@ boolean gameOver;
 boolean pause;
 boolean moveWithKeys;
 
+Tank viewMapFor;
+
 //======================================
 void setup() 
 {
@@ -94,6 +96,8 @@ void setup()
   allTanks[3] = tank3;
   allTanks[4] = tank4;
   allTanks[5] = tank5;
+
+  viewMapFor = tank0; // Default to showing map for tank0, can be changed by clicking on a tank
 }
 
 void draw()
@@ -110,17 +114,17 @@ void draw()
     updateBullets();
   }
   
-  // UPDATE DISPLAY 
+  // UPDATE DISPLAY
   displayHomeBase();
   displayTrees();
+  displayMap(viewMapFor);
   displayTanks();
   displayBullets();
   for (Tank tank : allTanks) {
-      if (tank.state == 5){    // Astar state
+      if (tank.state == 5 || tank.state == 6){    // Astar state
         tank.drawAstarPath();
       }
   }
-  displayMap(tank0);
   
   displayGUI();
 }
@@ -130,17 +134,17 @@ void searchForEnemies() {
   for (Tank tank : allTanks) {
     if (moveWithKeys) return;
 
-    if (tank.name == "tank0") continue; //Debug gör att tank0 inte ska söka efter fiender själv
+    //if (tank.name == "tank0") continue; //Debug gör att tank0 inte ska söka efter fiender själv
 
-    if (tank.state == 5) return;
+    if (tank.state == 5 || tank.state == 6) continue;
     if (tank.state == -1) continue;
 
     if (tank.isEnemyBase()) {
-      if (tank.state != 5) {       // only reset path when first entering state 5
+      if (tank.state != 5 ) {       // only reset path when first entering state 5
         tank.pathCalculated = false;
         tank.astarPath = null;
       }
-      tank.state = 5;
+      // tank.state = 5; Removed to skip A* back to base for now
       return;
     }
 
@@ -276,8 +280,16 @@ void keyReleased(){
 }
 
 void mousePressed() {
+  PVector pos = new PVector(mouseX, mouseY);
+  for (Tank tank : allTanks) {
+    if (tank.checkForCollisions(pos)) {
+      println("Viewing map for " + tank.name);
+      viewMapFor = tank;
+      return;
+    }
+  }
+
   if (pause){
-    PVector pos = new PVector(mouseX, mouseY);
     Tree newTree = new Tree(tree_img, pos);
     allTrees.add(newTree);
     println("Debug: added tree at (" + mouseX + ", " + mouseY + ")");
@@ -295,6 +307,7 @@ void updateBullets() {
       float d = dist(b.position.x, b.position.y, tank.position.x, tank.position.y);
       if (d < tank.diameter / 2) {
         remove = true;
+        tank.hit();
         println("Tank hit!");
         break;
       }

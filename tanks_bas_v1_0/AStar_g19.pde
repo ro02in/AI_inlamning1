@@ -32,7 +32,7 @@ class AStar {
 
     if (c == null) return !allowUnseen;
 
-    return c.obstacleType != ObstacleType.NONE;
+    return c.obstacleType.isObstacle();
   }
 
   PathNode getNode(ArrayList<PathNode> list, int x, int y) {

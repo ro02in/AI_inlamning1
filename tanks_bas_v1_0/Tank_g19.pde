@@ -27,6 +27,8 @@ class Tank extends Sprite {
   int stepsToNext = -1; // steps until next turn
 
   int stepsFromLastGpsReading = 0; // Tanks read gps whenever in their home base (or later manual reading) and will get more lost the longer since last reading.
+  int inCombatSince = 0; // Used to determine when to give up on combat and try to keep moving.
+  PVector positionTarget = null;
 
   Map map;
   Radio radio;
@@ -134,7 +136,7 @@ class Tank extends Sprite {
 
     if (state == -1) return; // Keep standing dead if dead
     if (state == 0) return; // Keep standing still if still
-    if (state == 5) {
+    if (state == 5 || state == 6) {
       if (obstacleDetected)
         pathCalculated = false; // Might need to find a new path upon a newly detected obstacle
       return;
@@ -148,7 +150,7 @@ class Tank extends Sprite {
       speed -= 0.03;
       if (speed < 0) speed = 0;
       if (stepsToNext <= 0) {
-        if (canMove(velocity)) {
+        if (canMoveForwards()) {
           turning = 0;
           stepsToNext = int(random(20, 50));
         }
@@ -241,6 +243,38 @@ class Tank extends Sprite {
     return !sprite.checkForGlobalCollisions();
   }
 
+  boolean isAStarObstacleCell(int gx, int gy, boolean allowUnseen) {
+    if (gx < 0 || gy < 0 || gx >= map.cols || gy >= map.rows) return true;
+    Cell c = map.grid[gx][gy];
+    if (c == null) return !allowUnseen;
+    return c.obstacleType != ObstacleType.NONE;
+  }
+
+  Node nearestNonObstacleTo(Node desiredGoal, boolean allowUnseen) {
+    if (desiredGoal == null) return null;
+
+    int gx = constrain(desiredGoal.x, 0, map.cols - 1);
+    int gy = constrain(desiredGoal.y, 0, map.rows - 1);
+
+    if (!isAStarObstacleCell(gx, gy, allowUnseen)) return new Node(gx, gy);
+
+    int maxR = 15; // keep simple + cheap
+    for (int r = 1; r <= maxR; r++) {
+      for (int dx = -r; dx <= r; dx++) {
+        for (int dy = -r; dy <= r; dy++) {
+          if (abs(dx) != r && abs(dy) != r) continue; // only check ring
+          int nx = gx + dx;
+          int ny = gy + dy;
+          if (!isAStarObstacleCell(nx, ny, allowUnseen)) {
+            return new Node(nx, ny);
+          }
+        }
+      }
+    }
+
+    return new Node(gx, gy);
+  }
+
   // Check for obstacles at a position
   ObstacleType checkForObstacles(float x, float y) {
     for (Tree tree : allTrees) {
@@ -263,12 +297,14 @@ class Tank extends Sprite {
       if (tank == null) continue;
       if (tank.name == this.name) continue;
       if (tank.checkForCollisions(new PVector(x, y))) {
+        if (tank.state == -1) {
+          return ObstacleType.DEAD_TANK;
+        }
         if (tank.team == this.team) {
           return ObstacleType.FRIENDLY_TANK;
         } else {
-          shotEnemy(tank);
-        searchForEnemies(); 
-        return ObstacleType.ENEMY_TANK;
+          shootEnemy(tank);
+          return ObstacleType.ENEMY_TANK;
         }
       }
     }
@@ -283,7 +319,8 @@ class Tank extends Sprite {
     return ObstacleType.NONE;
   }
 
-  void shotEnemy(Tank target){
+  void shootEnemy(Tank target){
+    inCombatSince = 10;
 
     float dx = target.position.x - this.position.x;
     float dy = target.position.y - this.position.y;
@@ -291,11 +328,11 @@ class Tank extends Sprite {
     float angleDiff = targetAngle - angle;
     angleDiff = atan2(sin(angleDiff), cos(angleDiff));
 
-    if (angleDiff > 0.05) {
+    if (angleDiff >= 0.3) {
       state = 3;
-    } else if (angleDiff < -0.05) {
+    } else if (angleDiff <= -0.3) {
       state = 4;
-    } else if (0.05 > angleDiff && -0.05 < angleDiff ){
+    } else if (0.3 > angleDiff && -0.3 < angleDiff ){
       state = 0;
       shoot();
     }
@@ -385,7 +422,7 @@ class Tank extends Sprite {
   }
   //======================================
   void action(String _action) {
-    if (state != 5 || state != -1) {
+    if (state != -1) {
       lookAhead();
     }
 
@@ -409,6 +446,10 @@ class Tank extends Sprite {
       break;
     case "goBackToBaseAStar":
       goBackToBaseAStar();
+      break;
+    case "goToPositionAStar":
+      goToPositionAStar();
+      break;
     }
   }
 
@@ -421,8 +462,14 @@ class Tank extends Sprite {
       return;
     }
 
-    lookAhead();
     if (shootCooldown > 0) shootCooldown--;
+    if (inCombatSince > 0) {
+      inCombatSince--;
+      if (inCombatSince == 0) {
+        println(name + " gives up combat.");
+        state = 1; // Give up combat and try to keep moving
+      }
+    }
 
     switch (state) {
     case -1:
@@ -447,6 +494,9 @@ class Tank extends Sprite {
     case 5:
       action("goBackToBaseAStar");
       break;
+    case 6:
+      action("goToPositionAStar");
+      break;
     }
 
     if (!canMove(velocity)) {
@@ -454,6 +504,85 @@ class Tank extends Sprite {
     }
 
     this.position.add(velocity);
+  }
+
+  void beginGoToPositionAStar(PVector target) {
+    if (state == -1) return; // Don't do anything if dead
+    this.positionTarget = target;
+    this.state = 6;
+    this.pathCalculated = false;
+  }
+
+  void goToPositionAStar() {
+    int gridSize = map.cellSize;
+
+    if (!pathCalculated) {
+      Node start = new Node(int(position.x / gridSize), int(position.y / gridSize));
+
+      Node desiredGoal = new Node(int(positionTarget.x / gridSize), int(positionTarget.y / gridSize));
+
+      AStar astar = new AStar(map, gridSize);
+      Node goal = nearestNonObstacleTo(desiredGoal, false);
+      astarPath = astar.findPath(start, goal, false);
+      if (astarPath == null) {
+        goal = nearestNonObstacleTo(desiredGoal, true);
+        astarPath = astar.findPath(start, goal, true); // fallback to include unseen places on the map
+      }
+
+      if (astarPath == null) {
+        println("Ingen väg hittad för tank " + name + " — tanken fortsätter åka slumpmässigt.");
+        state = 0; // No path found, give up and just move randomly
+      } else {
+        println("Väg hittad för tank " + name + ", antal steg: " + astarPath.size());
+        pathCalculated = true;
+        pathIndex = 1; // Start at second node in path to prevent jittering backwards
+      }
+    }
+
+    if (astarPath == null) {
+
+      float targetX = startpos.x;
+      float targetY = startpos.y;
+      float dx = targetX - position.x;
+      float dy = targetY - position.y;
+      float dist = sqrt(dx * dx + dy * dy);
+      if (dist > 5) {
+        angle = atan2(dy, dx);
+        speed += 0.1;
+        if (speed > maxspeed) speed = maxspeed;
+        velocity.x = cos(angle) * speed;
+        velocity.y = sin(angle) * speed;
+      } else {
+        if (canMoveForwards()) {
+          state = 1;
+        }
+      }
+      return;
+    }
+
+    if (pathIndex < astarPath.size()) {
+      Node target  = astarPath.get(pathIndex);
+      float targetX = target.x * gridSize + gridSize / 2.0;
+      float targetY = target.y * gridSize + gridSize / 2.0;
+
+      float dx = targetX - position.x;
+      float dy = targetY - position.y;
+      float dist = sqrt(dx * dx + dy * dy);
+
+      if (dist < 5) {
+        pathIndex++;
+      } else {
+        angle = atan2(dy, dx);
+        speed += 0.1;
+        if (speed > maxspeed) speed = maxspeed;
+        velocity.x = cos(angle) * speed;
+        velocity.y = sin(angle) * speed;
+      }
+    } else {
+      stopMoving();
+      state = 0;
+      pathCalculated = false;
+    }
   }
 
   /**
@@ -470,19 +599,21 @@ class Tank extends Sprite {
     if (!pathCalculated) {
       Node start = new Node(int(position.x / gridSize), int(position.y / gridSize));
 
-      Node goal = new Node(int(startpos.x / gridSize), int(startpos.y / gridSize));
+      Node desiredGoal = new Node(int(startpos.x / gridSize), int(startpos.y / gridSize));
 
       AStar astar = new AStar(map, gridSize);
+      Node goal = nearestNonObstacleTo(desiredGoal, false);
       astarPath = astar.findPath(start, goal, false);
       if (astarPath == null) {
+        goal = nearestNonObstacleTo(desiredGoal, true);
         astarPath = astar.findPath(start, goal, true); // fallback to include unseen places on the map
       }
 
       if (astarPath == null) {
-        println("Ingen väg hittad — tanken fortsätter åka slumpmässigt.");
-        state = 0; // No path found, give up and just move randomly
+        println("Ingen väg hittad för tank " + name + " — tanken fortsätter åka slumpmässigt.");
+        state = 1; // No path found, give up and just move randomly
       } else {
-        println("Väg hittad, antal steg: " + astarPath.size());
+        println("Väg hittad för tank " + name + ", antal steg: " + astarPath.size());
         pathCalculated = true;
         pathIndex = 1; // Start at second node in path to prevent jittering backwards
       }
@@ -579,6 +710,7 @@ class Tank extends Sprite {
   }
 
   void drawAstarPath() {
+    if (astarPath == null) return;
     pushStyle();
     stroke(0, 0, 255);  //blå
     strokeWeight(1);

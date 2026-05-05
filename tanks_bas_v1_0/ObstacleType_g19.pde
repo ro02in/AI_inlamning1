@@ -1,23 +1,32 @@
 // Robin Karim, Oliwer Carpman, Rafal Galinski
 enum ObstacleType {
-    TREE(3),
-    NEAR_TREE(2),
-    FRIENDLY_TANK(1),
-    ENEMY_TANK(1),
-    NEAR_TANK(1),
-    REPORTED_FRIENDLY_TANK(1),
-    REPORTED_ENEMY_TANK(1),
-    NONE(1),
-    REPORTED_TREE(0);
+    TREE(6, true),
+    DEAD_TANK(5, true),
+    NEAR_TREE(4, true),
+    NEAR_DEAD_TANK(3, true),
+    FRIENDLY_TANK(2, true),
+    REPORTED_DEAD_TANK(1, false),
+    ENEMY_TANK(1, true),
+    NEAR_TANK(1, true),
+    REPORTED_FRIENDLY_TANK(1, false),
+    REPORTED_ENEMY_TANK(1, false),
+    NONE(1, false),
+    REPORTED_TREE(0, false);
 
     private final int priority;
+    private final boolean isObstacle;
 
-    ObstacleType(int priority) {
+    ObstacleType(int priority, boolean isObstacle) {
         this.priority = priority;
+        this.isObstacle = isObstacle;
     }
 
     public int getPriority() {
         return priority;
+    }
+
+    public boolean isObstacle() {
+        return isObstacle;
     }
 
     // Type 1 should be the most recently seen obstacle type

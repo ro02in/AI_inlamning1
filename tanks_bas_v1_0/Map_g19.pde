@@ -42,6 +42,9 @@ class Map {
             if (obstacleType == ObstacleType.FRIENDLY_TANK || obstacleType == ObstacleType.ENEMY_TANK) {
                 addNearObstacle(xCell, yCell, tankRadius, ObstacleType.NEAR_TANK);
             }
+            if (obstacleType == ObstacleType.DEAD_TANK) {
+                addNearObstacle(xCell, yCell, tankRadius, ObstacleType.NEAR_DEAD_TANK);
+            }
         }
         return changed;
     }
@@ -83,8 +86,16 @@ class Map {
                     fill(255, 0, 0, 100); // Red
                     rect(drawX, drawY, cellSize, cellSize);
                 }
+                else if (c.obstacleType == ObstacleType.DEAD_TANK) {
+                    fill(128, 128, 128, 100); // Gray
+                    rect(drawX, drawY, cellSize, cellSize);
+                }
                 else if (c.obstacleType == ObstacleType.NEAR_TREE) {
                     fill(128, 0, 0, 50); // Light red
+                    rect(drawX, drawY, cellSize, cellSize);
+                }
+                else if (c.obstacleType == ObstacleType.NEAR_DEAD_TANK || c.obstacleType == ObstacleType.REPORTED_DEAD_TANK) {
+                    fill(100, 100, 100, 50); // Light gray
                     rect(drawX, drawY, cellSize, cellSize);
                 }
                 else if (c.obstacleType == ObstacleType.FRIENDLY_TANK) {
