@@ -109,6 +109,7 @@ class Tank extends Sprite {
       lookAngle += 0.25;
     }
 
+    if (state == -1) return; // Keep standing dead if dead
     if (state == 0) return; // Keep standing still if still
     if (state == 5) {
       if (obstacleDetected)
@@ -167,6 +168,8 @@ class Tank extends Sprite {
 
   // Checks if this tank can move forwards
   boolean canMoveForwards() {
+    if (this.state == -1) return false;
+
     float accel = 0.1;
     float nextSpeed = speed + accel;
     if (nextSpeed > maxspeed) nextSpeed = maxspeed;
@@ -278,7 +281,7 @@ class Tank extends Sprite {
   }
 
   void hit() {
-    if (state == -1) return;
+    if (this.state == -1) return;
 
     health--;
     // Loses color with hits
