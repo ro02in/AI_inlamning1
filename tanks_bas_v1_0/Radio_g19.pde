@@ -21,6 +21,7 @@ class Radio {
         if (!isOn) return;
         tank.map.addToMap(position.x, position.y, ObstacleType.toReportedType(obstacleType), tank.diameter / 2);
         if (obstacleType == ObstacleType.ENEMY_TANK) {
+            if (tank.inCombatSince > 0) return; // Don't change target if already in combat
             tank.beginGoToPositionAStar(position);
         }
     }
