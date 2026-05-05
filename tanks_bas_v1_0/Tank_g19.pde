@@ -416,8 +416,14 @@ class Tank extends Sprite {
 
   // Checks if the tank is in the enemy base
   boolean isEnemyBase() {
-    if (position.x > width - 150 && position.y > height - 350) {
-      return true;
+    if (col == team0Color) {
+      if (position.x > width - 150 && position.y > height - 350) {
+        return true;
+      }
+    } else if (col == team1Color) {
+      if (position.x < 150 && position.y < 350) {
+        return true;
+      }
     }
 
     return false;
