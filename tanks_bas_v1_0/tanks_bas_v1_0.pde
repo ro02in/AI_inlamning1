@@ -131,6 +131,7 @@ void searchForEnemies() {
     if (tank.name == "tank0") continue; //Debug gör att tank0 inte ska söka efter fiender själv
 
     if (tank.state == 5) return;
+    if (tank.state == -1) continue;
 
     if (tank.isEnemyBase()) {
       if (tank.state != 5) {       // only reset path when first entering state 5
@@ -246,6 +247,14 @@ void keyPressed(){
     pause = false;
     moveWithKeys = true;
     tank0.state = 0;
+  }
+
+  // TEMPORÄR LÖSNING - Används till att skada tank 0
+  if(key == 'h'){
+    println("KEY PRESSED DETECTED: " + key);
+    tank0.hit();
+    tank3.hit();
+    tank2.hit();
   }
 
   if(!moveWithKeys){return;}

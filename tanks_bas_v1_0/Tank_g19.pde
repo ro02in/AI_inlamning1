@@ -12,6 +12,7 @@ class Tank extends Sprite {
   float speed;
   float maxspeed;
   float angle;  // Tanks direction
+  int health;
 
   int state;
   boolean isInTransition;
@@ -44,6 +45,7 @@ class Tank extends Sprite {
     this.state        = 0; //0(still), 1(moving)
     this.speed        = 0;
     this.maxspeed     = 3;
+    this.health       = 3; // 3 liv, på liv 1 är damaged (moves half speed, not implemented), på liv 0 är den död
     this.angle = 0;  // pointing right by default
     this.isInTransition = false;
     this.map = new Map(20);
@@ -128,6 +130,7 @@ class Tank extends Sprite {
       lookAngle += 0.25;
     }
 
+    if (state == -1) return; // Keep standing dead if dead
     if (state == 0) return; // Keep standing still if still
     if (state == 5) {
       if (obstacleDetected)
@@ -186,6 +189,8 @@ class Tank extends Sprite {
 
   // Checks if this tank can move forwards
   boolean canMoveForwards() {
+    if (this.state == -1) return false;
+
     float accel = 0.1;
     float nextSpeed = speed + accel;
     if (nextSpeed > maxspeed) nextSpeed = maxspeed;
@@ -300,9 +305,30 @@ class Tank extends Sprite {
     velocity.set(0, 0);
   }
 
+  void hit() {
+    if (this.state == -1) return;
+
+    health--;
+    // Loses color with hits
+    float t = health / 3.0;
+    this.col = color(
+      red(col) * (0.1 + 0.9 * t),
+      green(col) * (0.1 + 0.9 * t),
+      blue(col) * (0.1 + 0.9 * t)
+    );
+
+    println(name + " hit! HP: " + health);
+
+    if (health <= 0) {
+      health = 0;
+      state = -1; // DEAD State
+
+      println(name + " destroyed!");
+    }
+  }
   //======================================
   void action(String _action) {
-    if (state != 5) {
+    if (state != 5 || state != -1) {
       lookAhead();
     }
 
@@ -332,9 +358,18 @@ class Tank extends Sprite {
   //======================================
 
   void update() {
+    // DEAD STATE
+    if (state == -1) {
+      stopMoving();
+      return;
+    }
+
     lookAhead();
 
     switch (state) {
+    case -1:
+      action("dead");
+      return;
     case 0:
       // still/idle
       action("stop");
@@ -521,7 +556,7 @@ class Tank extends Sprite {
     fill(30);
     textSize(15);
     String posText = String.format(Locale.US, "(%.2f, %.2f)", this.position.x, this.position.y);
-    text(this.name + "\n" + posText, hudX + 5, hudY + 20);
+    text(this.name + "  HP: " + this.health + "\n" + posText, hudX + 5, hudY + 20);
   }
 }
 
