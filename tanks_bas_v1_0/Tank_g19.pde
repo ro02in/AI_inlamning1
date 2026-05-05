@@ -11,6 +11,7 @@ class Tank extends Sprite {
   float speed;
   float maxspeed;
   float angle;  // Tanks direction
+  int health;
 
   int state;
   boolean isInTransition;
@@ -38,6 +39,7 @@ class Tank extends Sprite {
     this.state        = 0; //0(still), 1(moving)
     this.speed        = 0;
     this.maxspeed     = 3;
+    this.health       = 3; // 3 liv, på liv 1 är damaged (moves half speed, not implemented), på liv 0 är den död
     this.angle = 0;  // pointing right by default
     this.isInTransition = false;
     this.map = new Map(20);
@@ -275,9 +277,30 @@ class Tank extends Sprite {
     velocity.set(0, 0);
   }
 
+  void hit() {
+    if (state == -1) return;
+
+    health--;
+    // Loses color with hits
+    float t = health / 3.0;
+    this.col = color(
+      red(col) * (0.1 + 0.9 * t),
+      green(col) * (0.1 + 0.9 * t),
+      blue(col) * (0.1 + 0.9 * t)
+    );
+
+    println(name + " hit! HP: " + health);
+
+    if (health <= 0) {
+      health = 0;
+      state = -1; // DEAD State
+
+      println(name + " destroyed!");
+    }
+  }
   //======================================
   void action(String _action) {
-    if (state != 5) {
+    if (state != 5 || state != -1) {
       lookAhead();
     }
 
@@ -307,9 +330,18 @@ class Tank extends Sprite {
   //======================================
 
   void update() {
+    // DEAD STATE
+    if (state == -1) {
+      stopMoving();
+      return;
+    }
+
     lookAhead();
 
     switch (state) {
+    case -1:
+      action("dead");
+      return;
     case 0:
       // still/idle
       action("stop");

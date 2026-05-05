@@ -242,6 +242,14 @@ void keyPressed(){
     tank0.state = 0;
   }
 
+  // TEMPORÄR LÖSNING - Används till att skada tank 0
+  if(key == 'h'){
+    println("KEY PRESSED DETECTED: " + key);
+    tank0.hit();
+    tank3.hit();
+    tank2.hit();
+  }
+
   if(!moveWithKeys){return;}
 
     if (key == 'w') tank0.state = 1;
