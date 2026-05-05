@@ -7,11 +7,13 @@ class Tank extends Sprite {
   PVector startpos;
   PImage img;
   color col;
+  Team team;
 
   float speed;
   float maxspeed;
   float angle;  // Tanks direction
   int shootCooldown = 0;
+  int health;
 
   int state;
   boolean isInTransition;
@@ -24,13 +26,18 @@ class Tank extends Sprite {
   int turning; // -1 = turning left, 0 = not turning, 1 = turning right
   int stepsToNext = -1; // steps until next turn
 
+  int stepsFromLastGpsReading = 0; // Tanks read gps whenever in their home base (or later manual reading) and will get more lost the longer since last reading.
+
   Map map;
+  Radio radio;
 
   //======================================
-  Tank(String _name, PVector _startpos, float _size, color _col ) {
+  Tank(String _name, PVector _startpos, float _size, color _col, Team _team ) {
     this.name         = _name;
     this.diameter     = _size;
     this.col          = _col;
+    this.team          = _team;
+
 
     this.startpos     = new PVector(_startpos.x, _startpos.y);
     this.position     = new PVector(this.startpos.x, this.startpos.y);
@@ -40,9 +47,12 @@ class Tank extends Sprite {
     this.state        = 0; //0(still), 1(moving)
     this.speed        = 0;
     this.maxspeed     = 3;
+    this.health       = 3; // 3 liv, på liv 1 är damaged (moves half speed, not implemented), på liv 0 är den död
     this.angle = 0;  // pointing right by default
     this.isInTransition = false;
     this.map = new Map(20);
+    this.radio = new Radio(this);
+
     map.addToMap(startpos.x, startpos.y, ObstacleType.NONE, diameter/2);
   }
 
@@ -61,6 +71,12 @@ class Tank extends Sprite {
       stepsToNext -=1;
     }
 
+    if (isHomeBase()) {
+      stepsFromLastGpsReading = 0;
+    } else {
+      stepsFromLastGpsReading++;
+    }
+
     float accel = 0.1;
     speed += accel;
     if (speed > maxspeed) speed = maxspeed;
@@ -69,6 +85,12 @@ class Tank extends Sprite {
   }
 
   void moveBackward() {
+    if (isHomeBase()) {
+      stepsFromLastGpsReading = 0;
+    } else {
+      stepsFromLastGpsReading++;
+    }
+
     float accel = 0.1;
     speed -= accel;
     if (speed < -maxspeed) speed = -maxspeed;
@@ -101,7 +123,8 @@ class Tank extends Sprite {
         }
         if (obstacleType != ObstacleType.NONE) {
           rayBlocked[i] = j;
-          if (addedObstacle)
+          if (addedObstacle != null && addedObstacle)
+            radio.reportRadio(new PVector(x, y), obstacleType, stepsFromLastGpsReading, team);
             obstacleDetected = true;
           break;
         }
@@ -109,6 +132,7 @@ class Tank extends Sprite {
       lookAngle += 0.25;
     }
 
+    if (state == -1) return; // Keep standing dead if dead
     if (state == 0) return; // Keep standing still if still
     if (state == 5) {
       if (obstacleDetected)
@@ -167,6 +191,8 @@ class Tank extends Sprite {
 
   // Checks if this tank can move forwards
   boolean canMoveForwards() {
+    if (this.state == -1) return false;
+
     float accel = 0.1;
     float nextSpeed = speed + accel;
     if (nextSpeed > maxspeed) nextSpeed = maxspeed;
@@ -237,9 +263,13 @@ class Tank extends Sprite {
       if (tank == null) continue;
       if (tank.name == this.name) continue;
       if (tank.checkForCollisions(new PVector(x, y))) {
-        shotEnemy(tank);
+        if (tank.team == this.team) {
+          return ObstacleType.FRIENDLY_TANK;
+        } else {
+          shotEnemy(tank);
         searchForEnemies(); 
-        return ObstacleType.TANK;
+        return ObstacleType.ENEMY_TANK;
+        }
       }
     }
     
@@ -332,9 +362,30 @@ class Tank extends Sprite {
     velocity.set(0, 0);
   }
 
+  void hit() {
+    if (this.state == -1) return;
+
+    health--;
+    // Loses color with hits
+    float t = health / 3.0;
+    this.col = color(
+      red(col) * (0.1 + 0.9 * t),
+      green(col) * (0.1 + 0.9 * t),
+      blue(col) * (0.1 + 0.9 * t)
+    );
+
+    println(name + " hit! HP: " + health);
+
+    if (health <= 0) {
+      health = 0;
+      state = -1; // DEAD State
+
+      println(name + " destroyed!");
+    }
+  }
   //======================================
   void action(String _action) {
-    if (state != 5) {
+    if (state != 5 || state != -1) {
       lookAhead();
     }
 
@@ -364,10 +415,19 @@ class Tank extends Sprite {
   //======================================
 
   void update() {
+    // DEAD STATE
+    if (state == -1) {
+      stopMoving();
+      return;
+    }
+
     lookAhead();
     if (shootCooldown > 0) shootCooldown--;
 
     switch (state) {
+    case -1:
+      action("dead");
+      return;
     case 0:
       // still/idle
       action("stop");
@@ -417,13 +477,14 @@ class Tank extends Sprite {
       if (astarPath == null) {
         astarPath = astar.findPath(start, goal, true); // fallback to include unseen places on the map
       }
-      pathCalculated = true;
-      pathIndex = 1; // Start at second node in path to prevent jittering backwards
 
       if (astarPath == null) {
-        println("Ingen väg hittad — tanken stannar.");
+        println("Ingen väg hittad — tanken fortsätter åka slumpmässigt.");
+        state = 0; // No path found, give up and just move randomly
       } else {
         println("Väg hittad, antal steg: " + astarPath.size());
+        pathCalculated = true;
+        pathIndex = 1; // Start at second node in path to prevent jittering backwards
       }
     }
 
@@ -487,6 +548,21 @@ class Tank extends Sprite {
     return false;
   }
 
+  // Checks if the tank is in the home base
+  boolean isHomeBase() {
+    if (col == team0Color) {
+      if (position.x < 150 && position.y < 350) {
+        return true;
+      }
+    } else if (col == team1Color) {
+      if (position.x > width - 150 && position.y > height - 350) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   //======================================
   void drawTank(float x, float y) {
     fill(this.col, 50);
@@ -538,7 +614,7 @@ class Tank extends Sprite {
     fill(30);
     textSize(15);
     String posText = String.format(Locale.US, "(%.2f, %.2f)", this.position.x, this.position.y);
-    text(this.name + "\n" + posText, hudX + 5, hudY + 20);
+    text(this.name + "  HP: " + this.health + "\n" + posText, hudX + 5, hudY + 20);
   }
 }
 

@@ -10,7 +10,7 @@ PImage tree_img;
 PVector tree1_pos, tree2_pos, tree3_pos;
 
 ArrayList<Tree> allTrees = new ArrayList<Tree>();
-Tank[] allTanks   = new Tank[6];
+static Tank[] allTanks   = new Tank[6];
 ArrayList<Bullet> bullets = new ArrayList<Bullet>();
 
 // Trees
@@ -21,6 +21,7 @@ color team0Color;
 PVector team0_tank0_startpos;
 PVector team0_tank1_startpos;
 PVector team0_tank2_startpos;
+Team team0;
 Tank tank0, tank1, tank2;
 
 // Team1
@@ -28,6 +29,7 @@ color team1Color;
 PVector team1_tank0_startpos;
 PVector team1_tank1_startpos;
 PVector team1_tank2_startpos;
+Team team1;
 Tank tank3, tank4, tank5;
 
 int tank_size;
@@ -76,13 +78,15 @@ void setup()
   team1_tank2_startpos  = new PVector(width-50, height-50);
   
   //tank0_startpos = new PVector(50, 50);
-  tank0 = new Tank("tank0", team0_tank0_startpos,tank_size, team0Color );
-  tank1 = new Tank("tank1", team0_tank1_startpos,tank_size, team0Color );
-  tank2 = new Tank("tank2", team0_tank2_startpos,tank_size, team0Color );
+  team0 = new Team();
+  tank0 = new Tank("tank0", team0_tank0_startpos,tank_size, team0Color, team0);
+  tank1 = new Tank("tank1", team0_tank1_startpos,tank_size, team0Color, team0);
+  tank2 = new Tank("tank2", team0_tank2_startpos,tank_size, team0Color, team0);
   
-  tank3 = new Tank("tank3", team1_tank0_startpos,tank_size, team1Color );
-  tank4 = new Tank("tank4", team1_tank1_startpos,tank_size, team1Color );
-  tank5 = new Tank("tank5", team1_tank2_startpos,tank_size, team1Color );
+  team1 = new Team();
+  tank3 = new Tank("tank3", team1_tank0_startpos,tank_size, team1Color, team1);
+  tank4 = new Tank("tank4", team1_tank1_startpos,tank_size, team1Color, team1);
+  tank5 = new Tank("tank5", team1_tank2_startpos,tank_size, team1Color, team1);
   
   allTanks[0] = tank0;                         // Symbol samma som index!
   allTanks[1] = tank1;
@@ -126,7 +130,10 @@ void searchForEnemies() {
   for (Tank tank : allTanks) {
     if (moveWithKeys) return;
 
+    if (tank.name == "tank0") continue; //Debug gör att tank0 inte ska söka efter fiender själv
+
     if (tank.state == 5) return;
+    if (tank.state == -1) continue;
 
     if (tank.isEnemyBase()) {
       if (tank.state != 5) {       // only reset path when first entering state 5
@@ -242,6 +249,14 @@ void keyPressed(){
     pause = false;
     moveWithKeys = true;
     tank0.state = 0;
+  }
+
+  // TEMPORÄR LÖSNING - Används till att skada tank 0
+  if(key == 'h'){
+    println("KEY PRESSED DETECTED: " + key);
+    tank0.hit();
+    tank3.hit();
+    tank2.hit();
   }
 
   if(!moveWithKeys){return;}
