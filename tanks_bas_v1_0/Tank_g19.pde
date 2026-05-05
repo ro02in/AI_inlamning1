@@ -11,9 +11,11 @@ class Tank extends Sprite {
   float speed;
   float maxspeed;
   float angle;  // Tanks direction
+  int shootCooldown = 0;
 
   int state;
   boolean isInTransition;
+  Tank[] enemyTanks = new Tank[3];
 
   ArrayList<Node> astarPath = null;
   int pathIndex = 0;
@@ -220,14 +222,69 @@ class Tank extends Sprite {
         return ObstacleType.TREE;
       }
     }
-    for (Tank tank : allTanks) {
+
+    if(col == team0Color){
+      enemyTanks[0] = tank3;
+      enemyTanks[1] = tank4;
+      enemyTanks[2] = tank5;
+    }else{
+      enemyTanks[0] = tank0;
+      enemyTanks[1] = tank1;
+      enemyTanks[2] = tank2;
+    }
+
+    for (Tank tank : enemyTanks) {
+      if (tank == null) continue;
       if (tank.name == this.name) continue;
       if (tank.checkForCollisions(new PVector(x, y))) {
+        shotEnemy(tank);
+        searchForEnemies(); 
         return ObstacleType.TANK;
       }
     }
+    
+    // kollar efter alla tanks
+    //for (Tank tank : allTanks) {
+      //if (tank.name == this.name) continue;
+      //if (tank.checkForCollisions(new PVector(x, y))) {
+      //  return ObstacleType.TANK;
+      //}
+    //}
     return ObstacleType.NONE;
   }
+
+  void shotEnemy(Tank target){
+
+    float dx = target.position.x - this.position.x;
+    float dy = target.position.y - this.position.y;
+    float targetAngle = atan2(dy, dx);
+    float angleDiff = targetAngle - angle;
+    angleDiff = atan2(sin(angleDiff), cos(angleDiff));
+
+    if (angleDiff > 0.05) {
+      state = 3;
+    } else if (angleDiff < -0.05) {
+      state = 4;
+    } else if (0.05 > angleDiff && -0.05 < angleDiff ){
+      state = 0;
+      shoot();
+    }
+
+  }
+
+  void shoot() {
+    if (shootCooldown > 0) return;
+
+    float cannonLength = diameter/2;
+
+    float bx = position.x + cos(angle) * cannonLength;
+    float by = position.y + sin(angle) * cannonLength;
+
+    bullets.add(new Bullet(bx, by, angle));
+
+    shootCooldown = 100;
+  }
+
 
   // Decide where to turn if stepstonext is at 0. Then/otherwise turn in the current direction.
   void decideAndTurn() {
@@ -308,6 +365,7 @@ class Tank extends Sprite {
 
   void update() {
     lookAhead();
+    if (shootCooldown > 0) shootCooldown--;
 
     switch (state) {
     case 0:

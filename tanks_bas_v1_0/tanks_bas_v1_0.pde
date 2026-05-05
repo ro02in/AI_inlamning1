@@ -11,6 +11,7 @@ PVector tree1_pos, tree2_pos, tree3_pos;
 
 ArrayList<Tree> allTrees = new ArrayList<Tree>();
 Tank[] allTanks   = new Tank[6];
+ArrayList<Bullet> bullets = new ArrayList<Bullet>();
 
 // Trees
 Tree tree1, tree2, tree3;
@@ -102,13 +103,14 @@ void draw()
 
     // UPDATE LOGIC
     updateTanksLogic();
-  
+    updateBullets();
   }
   
   // UPDATE DISPLAY 
   displayHomeBase();
   displayTrees();
   displayTanks();
+  displayBullets();
   for (Tank tank : allTanks) {
       if (tank.state == 5){    // Astar state
         tank.drawAstarPath();
@@ -264,5 +266,46 @@ void mousePressed() {
     Tree newTree = new Tree(tree_img, pos);
     allTrees.add(newTree);
     println("Debug: added tree at (" + mouseX + ", " + mouseY + ")");
+  }
+}
+
+void updateBullets() {
+  for (int i = bullets.size() - 1; i >= 0; i--) {
+    Bullet b = bullets.get(i);
+    b.update();
+    boolean remove = false;
+
+    for (Tank tank : allTanks) {
+      if (tank == null) continue;
+      float d = dist(b.position.x, b.position.y, tank.position.x, tank.position.y);
+      if (d < tank.diameter / 2) {
+        remove = true;
+        println("Tank hit!");
+        break;
+      }
+    }
+
+    for (Tree tree : allTrees) {
+      if (tree == null) continue;
+      if (tree.checkForCollisions(b.position)) {
+        remove = true;
+        break;
+      }
+    }
+
+    if (b.position.x < 0 || b.position.x > width || 
+        b.position.y < 0 || b.position.y > height) {
+      remove = true;
+    }
+
+    if (remove) {
+      bullets.remove(i);
+    }
+  }
+}
+
+void displayBullets() {
+  for (Bullet b : bullets) {
+    b.display();
   }
 }
