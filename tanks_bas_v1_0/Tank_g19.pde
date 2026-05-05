@@ -512,7 +512,7 @@ class Tank extends Sprite {
     fill(30);
     textSize(15);
     String posText = String.format(Locale.US, "(%.2f, %.2f)", this.position.x, this.position.y);
-    text(this.name + "\n" + posText, hudX + 5, hudY + 20);
+    text(this.name + "  HP: " + this.health + "\n" + posText, hudX + 5, hudY + 20);
   }
 }
 
