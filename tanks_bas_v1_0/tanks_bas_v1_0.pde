@@ -124,7 +124,6 @@ void searchForEnemies() {
   for (Tank tank : allTanks) {
     if (moveWithKeys) return;
 
-    if (tank.state == -1) return;
     if (tank.state == 5) return;
 
     if (tank.isEnemyBase()) {
