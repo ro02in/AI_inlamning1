@@ -128,7 +128,7 @@ void searchForEnemies() {
   for (Tank tank : allTanks) {
     if (moveWithKeys) return;
 
-    //if (tank.name == "tank0") continue; Debug gör att tank0 inte ska söka efter fiender själv
+    if (tank.name == "tank0") continue; //Debug gör att tank0 inte ska söka efter fiender själv
 
     if (tank.state == 5) return;
 

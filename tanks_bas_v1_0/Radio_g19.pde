@@ -10,7 +10,7 @@ class Radio {
 
     void reportRadio(PVector position, ObstacleType obstacleType, int stepsFromLastGpsReading, Team team) {
         if (!isOn) return;
-        int roughnessFactor = Math.min(stepsFromLastGpsReading / 2, 200);
+        int roughnessFactor = Math.min(stepsFromLastGpsReading / 3, 200);
         float roughX = position.x + random(-roughnessFactor, roughnessFactor);
         float roughY = position.y + random(-roughnessFactor, roughnessFactor);
         PVector roughPos = new PVector(roughX, roughY);

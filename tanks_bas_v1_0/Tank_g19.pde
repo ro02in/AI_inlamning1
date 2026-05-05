@@ -384,13 +384,14 @@ class Tank extends Sprite {
       if (astarPath == null) {
         astarPath = astar.findPath(start, goal, true); // fallback to include unseen places on the map
       }
-      pathCalculated = true;
-      pathIndex = 1; // Start at second node in path to prevent jittering backwards
 
       if (astarPath == null) {
-        println("Ingen väg hittad — tanken stannar.");
+        println("Ingen väg hittad — tanken fortsätter åka slumpmässigt.");
+        state = 0; // No path found, give up and just move randomly
       } else {
         println("Väg hittad, antal steg: " + astarPath.size());
+        pathCalculated = true;
+        pathIndex = 1; // Start at second node in path to prevent jittering backwards
       }
     }
 
