@@ -125,6 +125,7 @@ void searchForEnemies() {
     if (moveWithKeys) return;
 
     if (tank.state == 5) return;
+    if (tank.state == -1) continue;
 
     if (tank.isEnemyBase()) {
       if (tank.state != 5) {       // only reset path when first entering state 5
