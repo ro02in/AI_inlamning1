@@ -39,7 +39,7 @@ class Map {
             if (obstacleType == ObstacleType.TREE) {
                 addNearObstacle(xCell, yCell, tankRadius, ObstacleType.NEAR_TREE);
             }
-            if (obstacleType == ObstacleType.TANK) {
+            if (obstacleType == ObstacleType.FRIENDLY_TANK || obstacleType == ObstacleType.ENEMY_TANK) {
                 addNearObstacle(xCell, yCell, tankRadius, ObstacleType.NEAR_TANK);
             }
         }
@@ -87,8 +87,20 @@ class Map {
                     fill(128, 0, 0, 50); // Light red
                     rect(drawX, drawY, cellSize, cellSize);
                 }
-                else if (c.obstacleType == ObstacleType.TANK) {
+                else if (c.obstacleType == ObstacleType.FRIENDLY_TANK) {
                     fill(255, 255, 0, 100); // Yellow
+                    rect(drawX, drawY, cellSize, cellSize);
+                }
+                else if (c.obstacleType == ObstacleType.ENEMY_TANK) {
+                    fill(255, 165, 0, 100); // Orange
+                    rect(drawX, drawY, cellSize, cellSize);
+                }
+                else if (c.obstacleType == ObstacleType.REPORTED_FRIENDLY_TANK) {
+                    fill(190, 255, 0, 50); // Medium light Yellow
+                    rect(drawX, drawY, cellSize, cellSize);
+                }
+                else if (c.obstacleType == ObstacleType.REPORTED_ENEMY_TANK) {
+                    fill(190, 155, 0, 50); // Medium light Orange
                     rect(drawX, drawY, cellSize, cellSize);
                 }
                 else if (c.obstacleType == ObstacleType.NEAR_TANK) {
@@ -97,6 +109,10 @@ class Map {
                 }
                 else if (c.obstacleType == ObstacleType.NONE) {
                     fill(0, 255, 0, 30); // Green
+                    rect(drawX, drawY, cellSize, cellSize);
+                }
+                else if (c.obstacleType == ObstacleType.REPORTED_TREE) {
+                    fill(190, 0, 0, 70); // Medium light red
                     rect(drawX, drawY, cellSize, cellSize);
                 }
             }

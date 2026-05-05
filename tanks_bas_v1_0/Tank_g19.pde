@@ -7,6 +7,7 @@ class Tank extends Sprite {
   PVector startpos;
   PImage img;
   color col;
+  Team team;
 
   float speed;
   float maxspeed;
@@ -22,13 +23,18 @@ class Tank extends Sprite {
   int turning; // -1 = turning left, 0 = not turning, 1 = turning right
   int stepsToNext = -1; // steps until next turn
 
+  int stepsFromLastGpsReading = 0; // Tanks read gps whenever in their home base (or later manual reading) and will get more lost the longer since last reading.
+
   Map map;
+  Radio radio;
 
   //======================================
-  Tank(String _name, PVector _startpos, float _size, color _col ) {
+  Tank(String _name, PVector _startpos, float _size, color _col, Team _team ) {
     this.name         = _name;
     this.diameter     = _size;
     this.col          = _col;
+    this.team          = _team;
+
 
     this.startpos     = new PVector(_startpos.x, _startpos.y);
     this.position     = new PVector(this.startpos.x, this.startpos.y);
@@ -41,6 +47,8 @@ class Tank extends Sprite {
     this.angle = 0;  // pointing right by default
     this.isInTransition = false;
     this.map = new Map(20);
+    this.radio = new Radio(this);
+
     map.addToMap(startpos.x, startpos.y, ObstacleType.NONE, diameter/2);
   }
 
@@ -59,6 +67,12 @@ class Tank extends Sprite {
       stepsToNext -=1;
     }
 
+    if (isHomeBase()) {
+      stepsFromLastGpsReading = 0;
+    } else {
+      stepsFromLastGpsReading++;
+    }
+
     float accel = 0.1;
     speed += accel;
     if (speed > maxspeed) speed = maxspeed;
@@ -67,6 +81,12 @@ class Tank extends Sprite {
   }
 
   void moveBackward() {
+    if (isHomeBase()) {
+      stepsFromLastGpsReading = 0;
+    } else {
+      stepsFromLastGpsReading++;
+    }
+
     float accel = 0.1;
     speed -= accel;
     if (speed < -maxspeed) speed = -maxspeed;
@@ -99,7 +119,8 @@ class Tank extends Sprite {
         }
         if (obstacleType != ObstacleType.NONE) {
           rayBlocked[i] = j;
-          if (addedObstacle)
+          if (addedObstacle != null && addedObstacle)
+            radio.reportRadio(new PVector(x, y), obstacleType, stepsFromLastGpsReading, team);
             obstacleDetected = true;
           break;
         }
@@ -223,7 +244,11 @@ class Tank extends Sprite {
     for (Tank tank : allTanks) {
       if (tank.name == this.name) continue;
       if (tank.checkForCollisions(new PVector(x, y))) {
-        return ObstacleType.TANK;
+        if (tank.team == this.team) {
+          return ObstacleType.FRIENDLY_TANK;
+        } else {
+          return ObstacleType.ENEMY_TANK;
+        }
       }
     }
     return ObstacleType.NONE;
@@ -422,6 +447,21 @@ class Tank extends Sprite {
       }
     } else if (col == team1Color) {
       if (position.x < 150 && position.y < 350) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // Checks if the tank is in the home base
+  boolean isHomeBase() {
+    if (col == team0Color) {
+      if (position.x < 150 && position.y < 350) {
+        return true;
+      }
+    } else if (col == team1Color) {
+      if (position.x > width - 150 && position.y > height - 350) {
         return true;
       }
     }
