@@ -326,6 +326,10 @@ class Tank extends Sprite {
       break;
     case "goBackToBaseAStar":
       goBackToBaseAStar();
+      break;
+    case "reportRadio":
+      // Rapportera
+      break;
     }
   }
 
@@ -353,6 +357,9 @@ class Tank extends Sprite {
       break;
     case 5:
       action("goBackToBaseAStar");
+      break;
+    case 6:
+      action("reportRadio");
       break;
     }
 
