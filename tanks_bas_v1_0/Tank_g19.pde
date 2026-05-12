@@ -30,6 +30,7 @@ class Tank extends Sprite {
   int stepsFromLastGpsReading = 0; // Tanks read gps whenever in their home base (or later manual reading) and will get more lost the longer since last reading.
   int inCombatSince = 0; // Used to determine when to give up on combat and try to keep moving.
   PVector positionTarget = null;
+  int aStarCooldown = 0; // Cooldown to prevent A* from being called every frame when stuck
 
   Map map;
   Radio radio;
@@ -112,7 +113,7 @@ class Tank extends Sprite {
     boolean obstacleDetected = false;
     Integer[] rayBlocked = new Integer[5];
     for (int i = 0; i < 5; i++) {
-      for (int j = 1; j < 5; j++) {
+      for (int j = 1; j < 7; j++) {
         float x = position.x + cos(lookAngle) * j * 20;
         float y = position.y + sin(lookAngle) * j * 20;
         if (x < 0 || x > width || y < 0 || y > height) {
@@ -284,17 +285,7 @@ class Tank extends Sprite {
       }
     }
 
-    if(col == team0Color){
-      enemyTanks[0] = tank3;
-      enemyTanks[1] = tank4;
-      enemyTanks[2] = tank5;
-    }else{
-      enemyTanks[0] = tank0;
-      enemyTanks[1] = tank1;
-      enemyTanks[2] = tank2;
-    }
-
-    for (Tank tank : enemyTanks) {
+    for (Tank tank : allTanks) {
       if (tank == null) continue;
       if (tank.name == this.name) continue;
       if (tank.checkForCollisions(new PVector(x, y))) {
@@ -336,7 +327,7 @@ class Tank extends Sprite {
     } else if (angleDiff <= -0.3) {
       state = 4;
     } else if (0.3 > angleDiff && -0.3 < angleDiff ){
-      state = 0;
+      state = 1;
       shoot();
 
     }
@@ -346,8 +337,10 @@ class Tank extends Sprite {
   void shoot() {
     if (shootCooldown > 0) return;
     if (Abullets <= 0) {
-      state = 5;
-      pathCalculated = false;
+      if (aStarCooldown == 0) {
+        state = 5;
+        pathCalculated = false;
+      }
       return;
     }
 
@@ -358,10 +351,6 @@ class Tank extends Sprite {
 
     bullets.add(new Bullet(bx, by, angle));
     Abullets -= 1;
-    if (Abullets == 0) {
-      state = 5;
-      pathCalculated = false;
-    }
     shootCooldown = 100;
   }
 
@@ -475,18 +464,29 @@ class Tank extends Sprite {
       return;
     }
 
+    if (isHomeBase()) {
+      Abullets = 3;
+      if (state == 0 || state == 5 || state == 6) state = 1;
+    }
+
     if (shootCooldown > 0) shootCooldown--;
+    if (aStarCooldown > 0) aStarCooldown--;
+    if (radio.cooldown > 0) radio.cooldown--;
     if (inCombatSince > 0) {
       inCombatSince--;
       if (inCombatSince == 0) {
         println(name + " gives up combat.");
         if(state != 5) state = 1; // Give up combat and try to keep moving
       }
+    } else {
+      if (Abullets == 1 && aStarCooldown == 0) {
+        beginGoToPositionAStar(startpos); // Only one bullet left and not in combat, go home (use state 6 which cancels on new threats)
+      }
     }
 
-    if (isHomeBase() && Abullets < 3) {
-      Abullets = 3;
-      if (state == 0 || state == 5) state = 1;
+    if (Abullets == 0 && aStarCooldown == 0) {
+      state = 5;
+      pathCalculated = false;
     }
 
     switch (state) {
@@ -519,6 +519,10 @@ class Tank extends Sprite {
 
     if (!canMove(velocity)) {
       stopMoving();
+      if (state == 5 || state == 6) {
+        aStarCooldown = 10; // Wait a bit before trying to recalculate path to avoid doing it every frame when stuck
+        state = 1; // Revert to random movement if stuck, will try A* again in a few frames
+      }
     }
 
     this.position.add(velocity);
@@ -549,7 +553,7 @@ class Tank extends Sprite {
 
       if (astarPath == null) {
         println("Ingen väg hittad för tank " + name + " — tanken fortsätter åka slumpmässigt.");
-        state = 0; // No path found, give up and just move randomly
+        state = 1; // No path found, give up and just move randomly
       } else {
         println("Väg hittad för tank " + name + ", antal steg: " + astarPath.size());
         pathCalculated = true;
@@ -571,9 +575,8 @@ class Tank extends Sprite {
         velocity.x = cos(angle) * speed;
         velocity.y = sin(angle) * speed;
       } else {
-        if (canMoveForwards()) {
-          state = 1;
-        }
+        stopMoving();
+        state = 1;
       }
       return;
     }
@@ -598,7 +601,7 @@ class Tank extends Sprite {
       }
     } else {
       stopMoving();
-      state = 0;
+      state = 1;
       pathCalculated = false;
     }
   }
@@ -684,11 +687,11 @@ class Tank extends Sprite {
 
   // Checks if the tank is in the enemy base
   boolean isEnemyBase() {
-    if (col == team0Color) {
+    if (team == team0) {
       if (position.x > width - 150 && position.y > height - 350) {
         return true;
       }
-    } else if (col == team1Color) {
+    } else if (team == team1) {
       if (position.x < 150 && position.y < 350) {
         return true;
       }
@@ -699,11 +702,11 @@ class Tank extends Sprite {
 
   // Checks if the tank is in the home base
   boolean isHomeBase() {
-    if (col == team0Color) {
+    if (team == team0) {
       if (position.x < 150 && position.y < 350) {
         return true;
       }
-    } else if (col == team1Color) {
+    } else if (team == team1) {
       if (position.x > width - 150 && position.y > height - 350) {
         return true;
       }
