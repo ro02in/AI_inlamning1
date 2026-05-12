@@ -258,7 +258,7 @@ class Tank extends Sprite {
 
     if (!isAStarObstacleCell(gx, gy, allowUnseen)) return new Node(gx, gy);
 
-    int maxR = 15; // keep simple + cheap
+    int maxR = 15;
     for (int r = 1; r <= maxR; r++) {
       for (int dx = -r; dx <= r; dx++) {
         for (int dy = -r; dy <= r; dy++) {
@@ -333,7 +333,7 @@ class Tank extends Sprite {
     } else if (angleDiff <= -0.3) {
       state = 4;
     } else if (0.3 > angleDiff && -0.3 < angleDiff ){
-      state = 0;
+      state = 1;
       shoot();
     }
 
@@ -463,6 +463,7 @@ class Tank extends Sprite {
     }
 
     if (shootCooldown > 0) shootCooldown--;
+    if (radio.cooldown > 0) radio.cooldown--;
     if (inCombatSince > 0) {
       inCombatSince--;
       if (inCombatSince == 0) {
@@ -531,7 +532,7 @@ class Tank extends Sprite {
 
       if (astarPath == null) {
         println("Ingen väg hittad för tank " + name + " — tanken fortsätter åka slumpmässigt.");
-        state = 0; // No path found, give up and just move randomly
+        state = 1; // No path found, give up and just move randomly
       } else {
         println("Väg hittad för tank " + name + ", antal steg: " + astarPath.size());
         pathCalculated = true;
@@ -580,7 +581,7 @@ class Tank extends Sprite {
       }
     } else {
       stopMoving();
-      state = 0;
+      state = 1;
       pathCalculated = false;
     }
   }
@@ -634,7 +635,7 @@ class Tank extends Sprite {
         velocity.y = sin(angle) * speed;
       } else {
         stopMoving();
-        state = 0;
+        state = 1;
       }
       return;
     }
@@ -659,7 +660,7 @@ class Tank extends Sprite {
       }
     } else {
       stopMoving();
-      state = 0;
+      state = 1;
       pathCalculated = false;
     }
   }

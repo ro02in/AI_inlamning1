@@ -1,5 +1,5 @@
 // Robin Karim, Oliwer Carpman, Rafal Galinski
-public class Sprite {
+class Sprite {
   PVector position;
   float   diameter;
   String  name;
