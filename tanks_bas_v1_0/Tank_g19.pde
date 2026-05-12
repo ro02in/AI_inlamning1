@@ -13,6 +13,7 @@ class Tank extends Sprite {
   float maxspeed;
   float angle;  // Tanks direction
   int shootCooldown = 0;
+  int Abullets = 1;
   int health;
 
   int state;
@@ -334,7 +335,14 @@ class Tank extends Sprite {
       state = 4;
     } else if (0.3 > angleDiff && -0.3 < angleDiff ){
       state = 0;
-      shoot();
+      if (Abullets > 0){
+        shoot();
+        Abullets -= 1;
+     } else{
+        state = 5;
+        pathCalculated = true;
+      }
+      
     }
 
   }
@@ -469,6 +477,11 @@ class Tank extends Sprite {
         println(name + " gives up combat.");
         state = 1; // Give up combat and try to keep moving
       }
+    }
+
+    if (isHomeBase() && Abullets < 5) {
+      Abullets = 2;
+      if (state == 5 || state == 0) state = 1;
     }
 
     switch (state) {
@@ -610,7 +623,7 @@ class Tank extends Sprite {
       }
 
       if (astarPath == null) {
-        println("Ingen väg hittad för tank " + name + " — tanken fortsätter åka slumpmässigt.");
+        println("Ingen väg hittad för tank " + name + " - tanken fortsätter åka slumpmässigt.");
         state = 1; // No path found, give up and just move randomly
       } else {
         println("Väg hittad för tank " + name + ", antal steg: " + astarPath.size());
@@ -721,7 +734,7 @@ class Tank extends Sprite {
       float x = n.x * map.cellSize + map.cellSize/2;
       float y = n.y * map.cellSize + map.cellSize/2;
       ellipse(x, y, 5, 5);
-  }
+    }
     popStyle();
   }
   void display() {
@@ -746,7 +759,7 @@ class Tank extends Sprite {
     fill(30);
     textSize(15);
     String posText = String.format(Locale.US, "(%.2f, %.2f)", this.position.x, this.position.y);
-    text(this.name + "  HP: " + this.health + "\n" + posText, hudX + 5, hudY + 20);
+    text(this.name + "  HP: " + this.health + " B: " + this.Abullets + "\n" + posText, hudX + 5, hudY + 20);
   }
 }
 
