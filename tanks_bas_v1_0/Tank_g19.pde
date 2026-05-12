@@ -13,7 +13,7 @@ class Tank extends Sprite {
   float maxspeed;
   float angle;  // Tanks direction
   int shootCooldown = 0;
-  int Abullets = 1;
+  int Abullets = 3;
   int health;
 
   int state;
@@ -304,7 +304,9 @@ class Tank extends Sprite {
         if (tank.team == this.team) {
           return ObstacleType.FRIENDLY_TANK;
         } else {
-          shootEnemy(tank);
+          if (state != 5 && Abullets != 0){
+            shootEnemy(tank);
+          }
           return ObstacleType.ENEMY_TANK;
         }
       }
@@ -335,20 +337,19 @@ class Tank extends Sprite {
       state = 4;
     } else if (0.3 > angleDiff && -0.3 < angleDiff ){
       state = 0;
-      if (Abullets > 0){
-        shoot();
-        Abullets -= 1;
-     } else{
-        state = 5;
-        pathCalculated = true;
-      }
-      
+      shoot();
+
     }
 
   }
 
   void shoot() {
     if (shootCooldown > 0) return;
+    if (Abullets <= 0) {
+      state = 5;
+      pathCalculated = false;
+      return;
+    }
 
     float cannonLength = diameter/2;
 
@@ -356,7 +357,11 @@ class Tank extends Sprite {
     float by = position.y + sin(angle) * cannonLength;
 
     bullets.add(new Bullet(bx, by, angle));
-
+    Abullets -= 1;
+    if (Abullets == 0) {
+      state = 5;
+      pathCalculated = false;
+    }
     shootCooldown = 100;
   }
 
@@ -475,13 +480,13 @@ class Tank extends Sprite {
       inCombatSince--;
       if (inCombatSince == 0) {
         println(name + " gives up combat.");
-        state = 1; // Give up combat and try to keep moving
+        if(state != 5) state = 1; // Give up combat and try to keep moving
       }
     }
 
-    if (isHomeBase() && Abullets < 5) {
-      Abullets = 2;
-      if (state == 5 || state == 0) state = 1;
+    if (isHomeBase() && Abullets < 3) {
+      Abullets = 3;
+      if (state == 0 || state == 5) state = 1;
     }
 
     switch (state) {
@@ -647,7 +652,7 @@ class Tank extends Sprite {
         velocity.y = sin(angle) * speed;
       } else {
         stopMoving();
-        state = 0;
+        state = 1;
       }
       return;
     }
@@ -672,7 +677,7 @@ class Tank extends Sprite {
       }
     } else {
       stopMoving();
-      state = 0;
+      state = 1;
       pathCalculated = false;
     }
   }
