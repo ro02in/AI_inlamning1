@@ -403,6 +403,8 @@ class Tank extends Sprite {
     if (this.state == -1) return;
 
     health--;
+    maxspeed = health; // Loses speed with hits
+    if (speed > maxspeed) speed = maxspeed;
     // Loses color with hits
     float t = health / 3.0;
     this.col = color(
