@@ -2,7 +2,7 @@ class Radio {
     private boolean isOn = true;
     private GlobalRadioNetwork globalNetwork;
     private Tank tank;
-    private int cooldown = 0;
+    int cooldown = 0;
 
     public Radio(Tank tank) {
         this.tank = tank;

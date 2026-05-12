@@ -260,7 +260,7 @@ class Tank extends Sprite {
 
     if (!isAStarObstacleCell(gx, gy, allowUnseen)) return new Node(gx, gy);
 
-    int maxR = 15; // keep simple + cheap
+    int maxR = 15;
     for (int r = 1; r <= maxR; r++) {
       for (int dx = -r; dx <= r; dx++) {
         for (int dy = -r; dy <= r; dy++) {
@@ -405,6 +405,8 @@ class Tank extends Sprite {
     if (this.state == -1) return;
 
     health--;
+    maxspeed = health; // Loses speed with hits
+    if (speed > maxspeed) speed = maxspeed;
     // Loses color with hits
     float t = health / 3.0;
     this.col = color(
@@ -466,7 +468,7 @@ class Tank extends Sprite {
 
     if (isHomeBase()) {
       Abullets = 3;
-      if (state == 0 || state == 5 || state == 6) state = 1;
+      if (state == 0 || state == 5) state = 1;
     }
 
     if (shootCooldown > 0) shootCooldown--;
