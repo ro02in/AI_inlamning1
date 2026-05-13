@@ -1,8 +1,10 @@
 AI Inlämning 1 - Grupp 19
 Oliwer Carpman, Rafal Galinski, Robin Karim
 
-Instruktioner för att köra programmet.
-Något om processing.
+Instruktioner för att köra programmet:
+    Öppna projektet i Processing
+    Öppna en fil, exempelvis huvudfilen "tanks_bas_v1_0.pde"
+    kör programmet
 
 När programmet körs har man 3 knappar.
     
@@ -11,10 +13,11 @@ När programmet körs har man 3 knappar.
     2 startar manuellt kontrolläge
         Knappar 'w' och 's' används för att röra sig fram och bak
         Knappar 'a' och 'd' används för att svänga tanken vänster och höger
+        Om man trycker på en tank med musknappen ser man en gröna rutor av vad tanken känner till. Om man inte tryckte på någon defaultas man till den första röda tanken.
     
     p pausar all rörelse, eller startar det igen. 
         Ifall det trycks först startar tanken i läge 1.
-        Musknappen skapar nya träd där man klickar. Detta är endast för debuggning. (Ska uppdatera snart)
+        Musknappen skapar nya träd där man klickar om det inte är på en tank. Detta är endast för debuggning.
 
 Saker vi inte fått till:
 
