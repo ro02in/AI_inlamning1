@@ -1,3 +1,4 @@
+// Robin Karim, Oliwer Carpman, Rafal Galinski
 class Bullet {
   PVector position;
   PVector velocity;
