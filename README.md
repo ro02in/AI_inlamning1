@@ -19,20 +19,8 @@ När programmet körs har man 3 knappar.
         Ifall det trycks först startar tanken i läge 1.
         Musknappen skapar nya träd där man klickar om det inte är på en tank. Detta är endast för debuggning.
 
-Saker vi inte fått till:
-
-    En "debug mode" har inte lagts till. Funktioner i debug mode skulle inkludera vilka noder tanken åkt igenom, information om positionen, samt astar vägen. Just nu visas allt detta som default.
-    
-    Tanken ska pausa i 3 sekunder för att "raportera" basen. I nuläget återupptar den patrulningen direkt.
-
-    En tank ska hitta snabbaste vägen till hembasen, Dock hittar den nu snabbaste vägen till sin egen startpunkt
-
-    En motståndartank som hittas markeras på samma sätt som en vänlig tank men borde egentligen rapporteras
-
 Kända buggar:
 En tank i A-star läge svänger inte, utan direkt åker i rätt riktning
-
-Om A-star inte hittar en väg tillbaka bland kända och okända celler kraschar programmet
 
 Länk till Github repositorie:
     https://github.com/ro02in/AI_inlamning1.git
