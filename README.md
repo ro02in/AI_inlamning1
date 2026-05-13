@@ -6,7 +6,7 @@ Något om processing.
 
 När programmet körs har man 3 knappar.
     
-    1 startar en ai som automatiskt letar eftermotståendebasen. När den befinner sig med mer än 50% av sin egen längd i motståendebasen går den till A-star läge, och hittar en väg tillbaka till sin startpunkt.
+    1 startar alla tanks automatiskt som patrullerar världen och bygger individuella innre kartor av världen. När en tank ser en motstånadre   vänder den sig mot motståndaren och börjar skjuta, får den den slut på skott åter vänder sig tanken till sin egen bas med hjälp av Astar på delar av världen som är kända sen tidigare. Ifall att tank0 ser en motståndare och t.ex. tank1 befinner sig i sin egen bas eller mindre än 75px ifrån tank0 använder den Astar för att hitta en väg till tank0 för att hjälpa till i fighten (Radio funktion). Tanks användre ENDAST sina egna perceps och informations som den själv samalt in under spelet för att fatta vilka beslut som ska tas.  
 
     2 startar manuellt kontrolläge
         Knappar 'w' och 's' används för att röra sig fram och bak
