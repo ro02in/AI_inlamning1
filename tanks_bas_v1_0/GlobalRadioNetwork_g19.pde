@@ -1,3 +1,7 @@
+/**
+ * Robin Karim, Oliwer Carpman, Rafal Galinski
+ * Network to handle radio signals and distribute to nearby tanks in the same team and in the home base.
+ */
 static class GlobalRadioNetwork {
     private static GlobalRadioNetwork instance;
 

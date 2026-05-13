@@ -302,14 +302,6 @@ class Tank extends Sprite {
         }
       }
     }
-    
-    // kollar efter alla tanks
-    //for (Tank tank : allTanks) {
-      //if (tank.name == this.name) continue;
-      //if (tank.checkForCollisions(new PVector(x, y))) {
-      //  return ObstacleType.TANK;
-      //}
-    //}
     return ObstacleType.NONE;
   }
 
@@ -537,6 +529,11 @@ class Tank extends Sprite {
     this.pathCalculated = false;
   }
 
+  /**
+  * Calculates and follows a path to a target position using A* algorithm.
+  * If a path is already calculated, trace the path towards the target position.
+  * See goBackToBaseAStar for more details and fallback behavior if no path can be found with the current map.
+  */
   void goToPositionAStar() {
     int gridSize = map.cellSize;
 
@@ -609,7 +606,7 @@ class Tank extends Sprite {
   }
 
   /**
-  * Called when the enemy base is found or when the current calculated path is blocked.
+  * Called when needing to reload or when the current calculated path is blocked.
   * Calculates a path to this tanks starting position using A* over all seen positions on the tanks map.
   * If a path is already calculated, trace the path back towards the home base.
   * If no path can be found with the current map, a path is instead calculated including unseen spaces on the map
