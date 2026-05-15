@@ -13,6 +13,7 @@ class Tank extends Sprite {
   float maxspeed;
   float angle;  // Tanks direction
   int shootCooldown = 0;
+  int Abullets = 3;
   int health;
 
   int state;
@@ -29,6 +30,7 @@ class Tank extends Sprite {
   int stepsFromLastGpsReading = 0; // Tanks read gps whenever in their home base (or later manual reading) and will get more lost the longer since last reading.
   int inCombatSince = 0; // Used to determine when to give up on combat and try to keep moving.
   PVector positionTarget = null;
+  int aStarCooldown = 0; // Cooldown to prevent A* from being called every frame when stuck
 
   Map map;
   Radio radio;
@@ -111,7 +113,7 @@ class Tank extends Sprite {
     boolean obstacleDetected = false;
     Integer[] rayBlocked = new Integer[5];
     for (int i = 0; i < 5; i++) {
-      for (int j = 1; j < 5; j++) {
+      for (int j = 1; j < 7; j++) {
         float x = position.x + cos(lookAngle) * j * 20;
         float y = position.y + sin(lookAngle) * j * 20;
         if (x < 0 || x > width || y < 0 || y > height) {
@@ -283,17 +285,7 @@ class Tank extends Sprite {
       }
     }
 
-    if(col == team0Color){
-      enemyTanks[0] = tank3;
-      enemyTanks[1] = tank4;
-      enemyTanks[2] = tank5;
-    }else{
-      enemyTanks[0] = tank0;
-      enemyTanks[1] = tank1;
-      enemyTanks[2] = tank2;
-    }
-
-    for (Tank tank : enemyTanks) {
+    for (Tank tank : allTanks) {
       if (tank == null) continue;
       if (tank.name == this.name) continue;
       if (tank.checkForCollisions(new PVector(x, y))) {
@@ -303,19 +295,13 @@ class Tank extends Sprite {
         if (tank.team == this.team) {
           return ObstacleType.FRIENDLY_TANK;
         } else {
-          shootEnemy(tank);
+          if (state != 5 && Abullets != 0){
+            shootEnemy(tank);
+          }
           return ObstacleType.ENEMY_TANK;
         }
       }
     }
-    
-    // kollar efter alla tanks
-    //for (Tank tank : allTanks) {
-      //if (tank.name == this.name) continue;
-      //if (tank.checkForCollisions(new PVector(x, y))) {
-      //  return ObstacleType.TANK;
-      //}
-    //}
     return ObstacleType.NONE;
   }
 
@@ -335,12 +321,20 @@ class Tank extends Sprite {
     } else if (0.3 > angleDiff && -0.3 < angleDiff ){
       state = 1;
       shoot();
+
     }
 
   }
 
   void shoot() {
     if (shootCooldown > 0) return;
+    if (Abullets <= 0) {
+      if (aStarCooldown == 0) {
+        state = 5;
+        pathCalculated = false;
+      }
+      return;
+    }
 
     float cannonLength = diameter/2;
 
@@ -348,7 +342,7 @@ class Tank extends Sprite {
     float by = position.y + sin(angle) * cannonLength;
 
     bullets.add(new Bullet(bx, by, angle));
-
+    Abullets -= 1;
     shootCooldown = 100;
   }
 
@@ -464,14 +458,29 @@ class Tank extends Sprite {
       return;
     }
 
+    if (isHomeBase()) {
+      Abullets = 3;
+      if (state == 0 || state == 5) state = 1;
+    }
+
     if (shootCooldown > 0) shootCooldown--;
+    if (aStarCooldown > 0) aStarCooldown--;
     if (radio.cooldown > 0) radio.cooldown--;
     if (inCombatSince > 0) {
       inCombatSince--;
       if (inCombatSince == 0) {
         println(name + " gives up combat.");
-        state = 1; // Give up combat and try to keep moving
+        if(state != 5) state = 1; // Give up combat and try to keep moving
       }
+    } else {
+      if (Abullets == 1 && aStarCooldown == 0) {
+        beginGoToPositionAStar(startpos); // Only one bullet left and not in combat, go home (use state 6 which cancels on new threats)
+      }
+    }
+
+    if (Abullets == 0 && aStarCooldown == 0) {
+      state = 5;
+      pathCalculated = false;
     }
 
     switch (state) {
@@ -504,6 +513,10 @@ class Tank extends Sprite {
 
     if (!canMove(velocity)) {
       stopMoving();
+      if (state == 5 || state == 6) {
+        aStarCooldown = 10; // Wait a bit before trying to recalculate path to avoid doing it every frame when stuck
+        state = 1; // Revert to random movement if stuck, will try A* again in a few frames
+      }
     }
 
     this.position.add(velocity);
@@ -516,6 +529,11 @@ class Tank extends Sprite {
     this.pathCalculated = false;
   }
 
+  /**
+  * Calculates and follows a path to a target position using A* algorithm.
+  * If a path is already calculated, trace the path towards the target position.
+  * See goBackToBaseAStar for more details and fallback behavior if no path can be found with the current map.
+  */
   void goToPositionAStar() {
     int gridSize = map.cellSize;
 
@@ -523,86 +541,6 @@ class Tank extends Sprite {
       Node start = new Node(int(position.x / gridSize), int(position.y / gridSize));
 
       Node desiredGoal = new Node(int(positionTarget.x / gridSize), int(positionTarget.y / gridSize));
-
-      AStar astar = new AStar(map, gridSize);
-      Node goal = nearestNonObstacleTo(desiredGoal, false);
-      astarPath = astar.findPath(start, goal, false);
-      if (astarPath == null) {
-        goal = nearestNonObstacleTo(desiredGoal, true);
-        astarPath = astar.findPath(start, goal, true); // fallback to include unseen places on the map
-      }
-
-      if (astarPath == null) {
-        println("Ingen väg hittad för tank " + name + " — tanken fortsätter åka slumpmässigt.");
-        state = 1; // No path found, give up and just move randomly
-      } else {
-        println("Väg hittad för tank " + name + ", antal steg: " + astarPath.size());
-        pathCalculated = true;
-        pathIndex = 1; // Start at second node in path to prevent jittering backwards
-      }
-    }
-
-    if (astarPath == null) {
-
-      float targetX = startpos.x;
-      float targetY = startpos.y;
-      float dx = targetX - position.x;
-      float dy = targetY - position.y;
-      float dist = sqrt(dx * dx + dy * dy);
-      if (dist > 5) {
-        angle = atan2(dy, dx);
-        speed += 0.1;
-        if (speed > maxspeed) speed = maxspeed;
-        velocity.x = cos(angle) * speed;
-        velocity.y = sin(angle) * speed;
-      } else {
-        if (canMoveForwards()) {
-          state = 1;
-        }
-      }
-      return;
-    }
-
-    if (pathIndex < astarPath.size()) {
-      Node target  = astarPath.get(pathIndex);
-      float targetX = target.x * gridSize + gridSize / 2.0;
-      float targetY = target.y * gridSize + gridSize / 2.0;
-
-      float dx = targetX - position.x;
-      float dy = targetY - position.y;
-      float dist = sqrt(dx * dx + dy * dy);
-
-      if (dist < 5) {
-        pathIndex++;
-      } else {
-        angle = atan2(dy, dx);
-        speed += 0.1;
-        if (speed > maxspeed) speed = maxspeed;
-        velocity.x = cos(angle) * speed;
-        velocity.y = sin(angle) * speed;
-      }
-    } else {
-      stopMoving();
-      state = 1;
-      pathCalculated = false;
-    }
-  }
-
-  /**
-  * Called when the enemy base is found or when the current calculated path is blocked.
-  * Calculates a path to this tanks starting position using A* over all seen positions on the tanks map.
-  * If a path is already calculated, trace the path back towards the home base.
-  * If no path can be found with the current map, a path is instead calculated including unseen spaces on the map
-  * but keeping all obstacles marked from the current map.
-  * If no path can be found then - the game does the only sensible thing and crashes.
-  */
-  void goBackToBaseAStar() {
-    int gridSize = map.cellSize;
-
-    if (!pathCalculated) {
-      Node start = new Node(int(position.x / gridSize), int(position.y / gridSize));
-
-      Node desiredGoal = new Node(int(startpos.x / gridSize), int(startpos.y / gridSize));
 
       AStar astar = new AStar(map, gridSize);
       Node goal = nearestNonObstacleTo(desiredGoal, false);
@@ -667,13 +605,92 @@ class Tank extends Sprite {
     }
   }
 
+  /**
+  * Called when needing to reload or when the current calculated path is blocked.
+  * Calculates a path to this tanks starting position using A* over all seen positions on the tanks map.
+  * If a path is already calculated, trace the path back towards the home base.
+  * If no path can be found with the current map, a path is instead calculated including unseen spaces on the map
+  * but keeping all obstacles marked from the current map.
+  * If no path can be found then - the game does the only sensible thing and crashes.
+  */
+  void goBackToBaseAStar() {
+    int gridSize = map.cellSize;
+
+    if (!pathCalculated) {
+      Node start = new Node(int(position.x / gridSize), int(position.y / gridSize));
+
+      Node desiredGoal = new Node(int(startpos.x / gridSize), int(startpos.y / gridSize));
+
+      AStar astar = new AStar(map, gridSize);
+      Node goal = nearestNonObstacleTo(desiredGoal, false);
+      astarPath = astar.findPath(start, goal, false);
+      if (astarPath == null) {
+        goal = nearestNonObstacleTo(desiredGoal, true);
+        astarPath = astar.findPath(start, goal, true); // fallback to include unseen places on the map
+      }
+
+      if (astarPath == null) {
+        println("Ingen väg hittad för tank " + name + " - tanken fortsätter åka slumpmässigt.");
+        state = 1; // No path found, give up and just move randomly
+      } else {
+        println("Väg hittad för tank " + name + ", antal steg: " + astarPath.size());
+        pathCalculated = true;
+        pathIndex = 1; // Start at second node in path to prevent jittering backwards
+      }
+    }
+
+    if (astarPath == null) {
+
+      float targetX = startpos.x;
+      float targetY = startpos.y;
+      float dx = targetX - position.x;
+      float dy = targetY - position.y;
+      float dist = sqrt(dx * dx + dy * dy);
+      if (dist > 5) {
+        angle = atan2(dy, dx);
+        speed += 0.1;
+        if (speed > maxspeed) speed = maxspeed;
+        velocity.x = cos(angle) * speed;
+        velocity.y = sin(angle) * speed;
+      } else {
+        stopMoving();
+        state = 1;
+      }
+      return;
+    }
+
+    if (pathIndex < astarPath.size()) {
+      Node target  = astarPath.get(pathIndex);
+      float targetX = target.x * gridSize + gridSize / 2.0;
+      float targetY = target.y * gridSize + gridSize / 2.0;
+
+      float dx = targetX - position.x;
+      float dy = targetY - position.y;
+      float dist = sqrt(dx * dx + dy * dy);
+
+      if (dist < 5) {
+        pathIndex++;
+      } else {
+        angle = atan2(dy, dx);
+        speed += 0.1;
+        if (speed > maxspeed) speed = maxspeed;
+        velocity.x = cos(angle) * speed;
+        velocity.y = sin(angle) * speed;
+      }
+    } else {
+      stopMoving();
+      state = 1;
+      pathCalculated = false;
+    }
+  }
+
   // Checks if the tank is in the enemy base
   boolean isEnemyBase() {
-    if (col == team0Color) {
+    if (team == team0) {
       if (position.x > width - 150 && position.y > height - 350) {
         return true;
       }
-    } else if (col == team1Color) {
+    } else if (team == team1) {
       if (position.x < 150 && position.y < 350) {
         return true;
       }
@@ -684,11 +701,11 @@ class Tank extends Sprite {
 
   // Checks if the tank is in the home base
   boolean isHomeBase() {
-    if (col == team0Color) {
+    if (team == team0) {
       if (position.x < 150 && position.y < 350) {
         return true;
       }
-    } else if (col == team1Color) {
+    } else if (team == team1) {
       if (position.x > width - 150 && position.y > height - 350) {
         return true;
       }
@@ -724,7 +741,7 @@ class Tank extends Sprite {
       float x = n.x * map.cellSize + map.cellSize/2;
       float y = n.y * map.cellSize + map.cellSize/2;
       ellipse(x, y, 5, 5);
-  }
+    }
     popStyle();
   }
   void display() {
@@ -749,7 +766,7 @@ class Tank extends Sprite {
     fill(30);
     textSize(15);
     String posText = String.format(Locale.US, "(%.2f, %.2f)", this.position.x, this.position.y);
-    text(this.name + "  HP: " + this.health + "\n" + posText, hudX + 5, hudY + 20);
+    text(this.name + "  HP: " + this.health + " B: " + this.Abullets + "\n" + posText, hudX + 5, hudY + 20);
   }
 }
 
